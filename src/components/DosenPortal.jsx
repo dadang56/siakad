@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Users, 
   BookOpen, 
@@ -34,6 +34,25 @@ export default function DosenPortal({
   const [gradingState, setGradingState] = useState({});
   // State for in-progress attendance edits
   const [attendanceState, setAttendanceState] = useState({});
+
+  // Clock state
+  const [time, setTime] = useState(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+  const months = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+
+  const dayName = days[time.getDay()];
+  const dateNum = time.getDate();
+  const monthName = months[time.getMonth()];
+  const yearNum = time.getFullYear();
+  const timeStr = time.toTimeString().split(' ')[0]; // HH:MM:SS
 
   // 1. Filter data relevant to this Dosen
   const taughtClasses = kelasList.filter(k => k.dosen_nidn === currentUser.nidn);
@@ -193,91 +212,116 @@ export default function DosenPortal({
 
   return (
     <div>
-      {/* 1. DASHBOARD DOSE */}
-      {activeMenu === 'dashboard' && (
-        <div className="animate-fade-in">
-          {/* Welcome Banner */}
-          <div className="glass-card glow-cyan" style={{ marginBottom: '32px', background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(6, 182, 212, 0.15) 100%)' }}>
-            <span className="badge badge-info" style={{ marginBottom: '8px' }}>Portal Dosen Pengampu & Wali</span>
-            <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '4px' }}>Selamat Datang, {currentUser.nama}!</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>NIDN: {currentUser.nidn} | Jurusan/Prodi: {currentUser.prodi}</p>
+      {/* 1. DASHBOARD DOSEN */}
+      {activeMenu === 'dashboard' && (() => {
+        // Grouping bimbingan students by prodi
+        const bimbinganByProdi = advisoryCadets.reduce((acc, student) => {
+          const prodi = student.prodi || 'Tidak Diketahui';
+          if (!acc[prodi]) acc[prodi] = [];
+          acc[prodi].push(student);
+          return acc;
+        }, {});
+
+        return (
+          <div className="animate-fade-in">
+            {/* Clock and Time Widget */}
+            <div className="glass-card glow-cyan" style={{ marginBottom: '32px', padding: '24px', background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(6, 182, 212, 0.15) 100%)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+                <div>
+                  <span className="badge badge-info" style={{ marginBottom: '8px' }}>Portal Dosen Pengampu & Wali</span>
+                  <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '4px' }}>Selamat Datang, {currentUser.nama}!</h2>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: 0 }}>NIDN: {currentUser.nidn} | Jurusan/Prodi: {currentUser.prodi}</p>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '32px', fontWeight: '800', color: 'var(--cyan)', fontFamily: 'monospace', letterSpacing: '1px' }}>
+                    {timeStr}
+                  </div>
+                  <div style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: '600', marginTop: '4px' }}>
+                    {dayName}, {dateNum} {monthName} {yearNum}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bimbingan Students Grouped by Prodi */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div className="glass-card glow-blue">
+                <div className="card-header-clean" style={{ borderBottom: '1px solid var(--glass-border)', paddingBottom: '16px', marginBottom: '16px' }}>
+                  <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Users size={20} className="text-blue" />
+                    Daftar Mahasiswa Bimbingan per Program Studi
+                  </h3>
+                  <span className="badge badge-primary">{advisoryCadets.length} Mahasiswa</span>
+                </div>
+
+                {Object.keys(bimbinganByProdi).length > 0 ? (
+                  Object.keys(bimbinganByProdi).map((prodiName) => {
+                    const students = bimbinganByProdi[prodiName];
+                    return (
+                      <div key={prodiName} style={{ marginBottom: '24px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', padding: '8px 12px', background: 'rgba(6, 182, 212, 0.08)', borderRadius: '6px' }}>
+                          <GraduationCap size={16} className="text-cyan" />
+                          <h4 style={{ fontSize: '14px', fontWeight: '700', color: 'var(--cyan)' }}>{prodiName}</h4>
+                          <span className="badge badge-info" style={{ marginLeft: 'auto' }}>{students.length} Mahasiswa</span>
+                        </div>
+                        <div className="table-container">
+                          <table className="custom-table">
+                            <thead>
+                              <tr>
+                                <th>NIM</th>
+                                <th>Nama Mahasiswa</th>
+                                <th>Semester</th>
+                                <th>Kelas</th>
+                                <th style={{ textAlign: 'center' }}>IPK</th>
+                                <th style={{ textAlign: 'center' }}>Status UKT</th>
+                                <th style={{ textAlign: 'center' }}>Status KRS</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {students.map((student) => {
+                                const krs = krsList.find(k => k.nim === student.nim && k.tahun_ajaran === '2026/2027 Ganjil');
+                                return (
+                                  <tr key={student.nim}>
+                                    <td>{student.nim}</td>
+                                    <td><strong>{student.nama}</strong></td>
+                                    <td>Semester {student.semester}</td>
+                                    <td>{student.kelas}</td>
+                                    <td style={{ textAlign: 'center' }}>{student.ipk}</td>
+                                    <td style={{ textAlign: 'center' }}>
+                                      <span className={`badge ${student.status_ukt === 'Lunas' ? 'badge-success' : 'badge-danger'}`}>
+                                        {student.status_ukt}
+                                      </span>
+                                    </td>
+                                    <td style={{ textAlign: 'center' }}>
+                                      <span className={`badge ${
+                                        !krs ? 'badge-danger' : 
+                                        krs.status === 'Disetujui Ka. Prodi' ? 'badge-success' : 
+                                        krs.status === 'Disetujui Dosen Wali' ? 'badge-info' : 
+                                        krs.status.includes('Menunggu') ? 'badge-warning' : 
+                                        krs.status === 'Ditolak' ? 'badge-danger' : 'badge-info'
+                                      }`}>
+                                        {krs ? krs.status : 'Belum Isi'}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
+                    Anda tidak memiliki mahasiswa bimbingan akademik.
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-
-          {/* Dosen Stats */}
-          <div className="metrics-grid">
-            <div className="glass-card metric-card glow-cyan">
-              <div className="metric-icon-wrapper cyan">
-                <BookOpen />
-              </div>
-              <div className="metric-content">
-                <span className="metric-value">{taughtClasses.length} Kelas</span>
-                <span className="metric-label">Mata Kuliah Diajar</span>
-              </div>
-            </div>
-
-            <div className="glass-card metric-card glow-blue">
-              <div className="metric-icon-wrapper blue">
-                <Users />
-              </div>
-              <div className="metric-content">
-                <span className="metric-value">{totalEnrolledStudents} Mahasiswa</span>
-                <span className="metric-label">Total Mahasiswa Diajar</span>
-              </div>
-            </div>
-
-            <div className="glass-card metric-card glow-gold">
-              <div className="metric-icon-wrapper gold">
-                <Users />
-              </div>
-              <div className="metric-content">
-                <span className="metric-value">{advisoryCadets.length} Mahasiswa</span>
-                <span className="metric-label">Mahasiswa Bimbingan</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Taught Classes details */}
-          <div className="glass-card glow-blue">
-            <div className="card-header-clean">
-              <h3 className="card-title">Jadwal Mengajar Semester Aktif</h3>
-            </div>
-            {taughtClasses.length > 0 ? (
-              <div className="table-container">
-                <table className="custom-table">
-                  <thead>
-                    <tr>
-                      <th>ID Kelas</th>
-                      <th>Mata Kuliah</th>
-                      <th>Hari & Jam</th>
-                      <th>Ruang</th>
-                      <th>Jumlah Mahasiswa</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {taughtClasses.map((cl) => {
-                      const mk = matakuliahList.find(m => m.kode === cl.matakuliah_kode);
-                      return (
-                        <tr key={cl.id}>
-                          <td><strong>{cl.id}</strong></td>
-                          <td>
-                            <div>{mk?.nama}</div>
-                            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{mk?.kode} ({mk?.sks} SKS)</span>
-                          </td>
-                          <td>{cl.hari}, {cl.jam}</td>
-                          <td><span className="badge badge-info">{cl.ruang}</span></td>
-                          <td>{getEnrolledStudentsCount(cl.id)} Mahasiswa</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>Anda tidak memiliki kelas mengajar semester ini.</div>
-            )}
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* 2. KRS ADVISORY (PERWALIAN) */}
       {activeMenu === 'perwalian' && (
