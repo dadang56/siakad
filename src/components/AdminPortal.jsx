@@ -39,7 +39,7 @@ export default function AdminPortal({
   onApproveKrs,
   currentRole = 'admin',
   adminProdiDept = null,
-  
+  nilaiList = [],
   rawUsersList = [],
   jadwalPembelajaranList = [],
   onAddUser,
@@ -252,11 +252,11 @@ export default function AdminPortal({
     setShowJadwalModal(false);
   };
 
-  // Poin state
-  const [selectedTarunaNim, setSelectedTarunaNim] = useState('');
-  const [poinType, setPoinType] = useState('pelanggaran');
-  const [poinVal, setPoinVal] = useState(10);
-  const [poinDesc, setPoinDesc] = useState('');
+  // KHS Admin Menu States
+  const [khsProdiId, setKhsProdiId] = useState(currentRole === 'admin_prodi' ? PRODI_MAP_TO_DB[adminProdiDept] : 'ffe7ed2a-97b6-458b-9fc7-4d9b62e04efb');
+  const [khsKelasId, setKhsKelasId] = useState('');
+  const [khsSearchQuery, setKhsSearchQuery] = useState('');
+  const [selectedKhsStudentId, setSelectedKhsStudentId] = useState('');
 
   // Settings State
   const [tempSettings, setTempSettings] = useState({ ...settings });
@@ -950,165 +950,289 @@ export default function AdminPortal({
         </div>
       )}
 
-      {/* 5. KETARUNAAN (POIN) */}
-      {activeMenu === 'poin' && (
-        <div className="animate-fade-in">
-          <div className="page-header">
-            <div>
-              <h2 className="page-title">Pencatatan Poin Kemahasiswaan</h2>
-              <p className="page-subtitle">
-                {currentRole === 'admin' 
-                  ? 'Melihat rekapitulasi poin pelanggaran & prestasi Mahasiswa (BAK Monitoring).' 
-                  : `Kelola poin pelanggaran disiplin & prestasi Mahasiswa prodi ${adminProdiDept}.`}
-              </p>
-            </div>
-          </div>
+      {/* 5. KARTU HASIL SEMESTER (KHS) */}
+      {activeMenu === 'khs-admin' && (() => {
+        // Filter students by prodi and class
+        const filteredKhsStudents = rawUsersList
+          .filter(u => u.role === 'mahasiswa')
+          .filter(u => {
+            if (currentRole === 'admin_prodi') {
+              return u.prodi_id === PRODI_MAP_TO_DB[adminProdiDept];
+            }
+            return !khsProdiId || u.prodi_id === khsProdiId;
+          })
+          .filter(u => !khsKelasId || u.kelas_id === khsKelasId)
+          .filter(u => {
+            if (!khsSearchQuery.trim()) return true;
+            const q = khsSearchQuery.toLowerCase();
+            return u.nama?.toLowerCase().includes(q) || u.nim_nip?.toLowerCase().includes(q);
+          });
 
-          <div className="dashboard-layout" style={currentRole === 'admin' ? { display: 'block' } : {}}>
-            {/* Form Input Poin */}
-            {currentRole !== 'admin' && (
-              <div className="glass-card glow-gold">
-                <div className="card-header-clean">
-                  <h3 className="card-title"><ShieldAlert /> Entri Prestasi & Pelanggaran</h3>
-                </div>
-                <form onSubmit={handleAddPoinSubmit}>
-                  <div className="form-group">
-                    <label className="form-label">Pilih Mahasiswa:</label>
+        // Auto-select first student in the list if current selection is invalid or empty
+        const activeStudent = filteredKhsStudents.find(s => s.id === selectedKhsStudentId) || filteredKhsStudents[0];
+
+        // Find the class options for the select dropdown
+        const prodiFilterId = currentRole === 'admin_prodi' ? PRODI_MAP_TO_DB[adminProdiDept] : khsProdiId;
+        const khsKelasOptions = kelasList.filter(c => c.prodi_id === prodiFilterId);
+
+        // Fetch grades for the active student
+        const studentGrades = activeStudent ? nilaiList.filter(n => n.nim === activeStudent.nim_nip) : [];
+
+        // Calculate total SKS and IPS
+        const totalSks = studentGrades.reduce((sum, g) => sum + (g.sks || 0), 0);
+        const totalSksBobot = studentGrades.reduce((sum, g) => sum + ((g.sks || 0) * getBobot(g.nilai_huruf)), 0);
+        const ips = totalSks > 0 ? (totalSksBobot / totalSks).toFixed(2) : '0.00';
+
+        // Helper to get grade point weight
+        function getBobot(letter) {
+          switch (letter) {
+            case 'A': return 4.0;
+            case 'B+': return 3.5;
+            case 'B': return 3.0;
+            case 'C+': return 2.5;
+            case 'C': return 2.0;
+            case 'D': return 1.0;
+            default: return 0.0;
+          }
+        }
+
+        return (
+          <div className="animate-fade-in">
+            <div className="page-header">
+              <div>
+                <h2 className="page-title">Kartu Hasil Studi (KHS)</h2>
+                <p className="page-subtitle">Lihat nilai akhir semester per mahasiswa</p>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button className="btn btn-secondary btn-sm" onClick={() => alert('Fitur ekspor Excel dalam pengembangan')}>
+                  Export Excel
+                </button>
+                <button className="btn btn-primary btn-sm" onClick={() => window.print()}>
+                  Cetak
+                </button>
+                <button className="btn btn-secondary btn-sm" onClick={() => alert('Mencetak seluruh KHS kelas...')}>
+                  Cetak Semua ({filteredKhsStudents.length})
+                </button>
+              </div>
+            </div>
+
+            {/* Filter Bar */}
+            <div className="glass-card" style={{ marginBottom: '24px', padding: '16px', overflow: 'visible' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', alignItems: 'end' }}>
+                
+                {currentRole !== 'admin_prodi' && (
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label">Program Studi:</label>
                     <select 
-                      value={selectedTarunaNim}
-                      onChange={(e) => setSelectedTarunaNim(e.target.value)}
+                      value={khsProdiId} 
+                      onChange={(e) => {
+                        setKhsProdiId(e.target.value);
+                        setKhsKelasId('');
+                        setSelectedKhsStudentId('');
+                      }}
                       className="form-control"
                     >
-                      <option value="">-- Pilih Mahasiswa --</option>
-                      {filteredTarunaList.map(t => (
-                        <option key={t.nim} value={t.nim}>{t.nim} - {t.nama} ({t.prodi})</option>
-                      ))}
+                      <option value="ffe7ed2a-97b6-458b-9fc7-4d9b62e04efb">D-III Nautika</option>
+                      <option value="39ae54ce-9e86-4b99-943e-53437403e32d">D-III Permesinan Kapal</option>
+                      <option value="2df63354-d49e-4f31-88aa-513509e22954">D-III MTPD</option>
                     </select>
                   </div>
+                )}
 
-                  <div className="form-group">
-                    <label className="form-label">Jenis Log Poin:</label>
-                    <div style={{ display: 'flex', gap: '20px', marginTop: '4px' }}>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                        <input 
-                          type="radio" 
-                          name="poinType" 
-                          value="pelanggaran" 
-                          checked={poinType === 'pelanggaran'}
-                          onChange={() => setPoinType('pelanggaran')}
-                        />
-                        Pelanggaran (Poin Negatif)
-                      </label>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                        <input 
-                          type="radio" 
-                          name="poinType" 
-                          value="prestasi" 
-                          checked={poinType === 'prestasi'}
-                          onChange={() => setPoinType('prestasi')}
-                        />
-                        Prestasi (Poin Positif)
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Besaran Poin:</label>
-                    <input 
-                      type="number" 
-                      value={poinVal}
-                      onChange={(e) => setPoinVal(parseInt(e.target.value) || 0)}
-                      className="form-control"
-                      min={1} max={100}
-                    />
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Poin akan otomatis dikurangi jika pelanggaran, atau ditambahkan jika prestasi.</span>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Deskripsi Kejadian / Keterangan:</label>
-                    <textarea 
-                      value={poinDesc}
-                      onChange={(e) => setPoinDesc(e.target.value)}
-                      className="form-control"
-                      placeholder="Contoh: Terlambat apel pagi 15 menit atau Juara 1 Paduan Suara Tingkat Provinsi"
-                      style={{ height: '80px', resize: 'none' }}
-                    />
-                  </div>
-
-                  <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
-                    Simpan Catatan Poin
-                  </button>
-                </form>
-              </div>
-            )}
-
-            {/* Rekap Poin Taruna Terpilih */}
-            <div className="glass-card" style={currentRole === 'admin' ? { maxWidth: '800px', margin: '0 auto' } : {}}>
-              <div className="card-header-clean">
-                <h3 className="card-title">Rekap Kepribadian Mahasiswa</h3>
-              </div>
-              
-              {currentRole === 'admin' && (
-                <div className="form-group" style={{ marginBottom: '20px' }}>
-                  <label className="form-label">Pilih Mahasiswa untuk Dimonitor:</label>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label">Kelas:</label>
                   <select 
-                    value={selectedTarunaNim}
-                    onChange={(e) => setSelectedTarunaNim(e.target.value)}
+                    value={khsKelasId} 
+                    onChange={(e) => {
+                      setKhsKelasId(e.target.value);
+                      setSelectedKhsStudentId('');
+                    }}
                     className="form-control"
-                    style={{ maxWidth: '400px' }}
                   >
-                    <option value="">-- Pilih Mahasiswa --</option>
-                    {filteredTarunaList.map(t => (
-                      <option key={t.nim} value={t.nim}>{t.nim} - {t.nama} ({t.prodi})</option>
+                    <option value="">-- Semua Kelas --</option>
+                    {khsKelasOptions.map(c => (
+                      <option key={c.id} value={c.id}>{c.nama}</option>
                     ))}
                   </select>
                 </div>
-              )}
 
-              {selectedTaruna ? (
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', padding: '12px', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-sm)' }}>
-                    <div>
-                      <strong style={{ color: 'var(--text-main)' }}>{selectedTaruna.nama}</strong>
-                      <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Status Poin Saat Ini:</div>
-                    </div>
-                    <div className="badge badge-warning" style={{ fontSize: '16px', padding: '8px 16px' }}>
-                      {selectedTaruna.poin_ketarunaan} / 100 Poin
-                    </div>
-                  </div>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label">Cari Mahasiswa:</label>
+                  <input 
+                    type="text" 
+                    placeholder="Nama atau NIM..." 
+                    value={khsSearchQuery}
+                    onChange={(e) => {
+                      setKhsSearchQuery(e.target.value);
+                      setSelectedKhsStudentId('');
+                    }}
+                    className="form-control"
+                  />
+                </div>
+              </div>
+            </div>
 
-                  <div className="timeline">
-                    {selectedTaruna.riwayat_poin.length > 0 ? (
-                      selectedTaruna.riwayat_poin.map(log => (
-                        <div key={log.id} className="timeline-item">
-                          <div className={`timeline-marker ${log.jenis === 'prestasi' ? 'positive' : 'negative'}`}>
-                            <ShieldAlert style={{ width: '16px', height: '16px' }} />
-                          </div>
-                          <div className="timeline-content">
-                            <div className="timeline-header">
-                              <span className="timeline-title">{log.keterangan}</span>
-                              <span className={`badge ${log.jenis === 'prestasi' ? 'badge-success' : 'badge-danger'}`}>
-                                {log.poin > 0 ? `+${log.poin}` : log.poin}
-                              </span>
-                            </div>
-                            <div className="timeline-date">{log.tanggal}</div>
+            {/* Split Layout */}
+            <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
+              
+              {/* Left Column: Student List */}
+              <div className="glass-card" style={{ width: '350px', padding: '16px', maxHeight: '70vh', overflowY: 'auto', flexShrink: 0 }}>
+                <h3 className="card-title" style={{ fontSize: '15px', fontWeight: 'bold', marginBottom: '16px', paddingBottom: '8px', borderBottom: '1px solid var(--glass-border)' }}>
+                  Daftar Mahasiswa ({filteredKhsStudents.length})
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {filteredKhsStudents.map(student => {
+                    const studentKelas = kelasList.find(c => c.id === student.kelas_id)?.nama || '-';
+                    const isActive = activeStudent && activeStudent.id === student.id;
+                    return (
+                      <div 
+                        key={student.id}
+                        onClick={() => setSelectedKhsStudentId(student.id)}
+                        style={{ 
+                          padding: '12px 16px', 
+                          borderRadius: 'var(--radius-sm)', 
+                          cursor: 'pointer',
+                          background: isActive ? 'rgba(59, 130, 246, 0.15)' : 'rgba(255, 255, 255, 0.02)',
+                          border: isActive ? '1px solid var(--accent)' : '1px solid var(--glass-border)',
+                          transition: 'all 0.2s ease'
+                        }}
+                        className="hover-bg-accent"
+                      >
+                        <div style={{ fontWeight: 'bold', color: isActive ? 'var(--accent)' : 'var(--text-main)', fontSize: '13px' }}>{student.nama}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                          {student.nim_nip} &bull; {studentKelas}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {filteredKhsStudents.length === 0 && (
+                    <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)', fontSize: '13px' }}>
+                      Tidak ada mahasiswa ditemukan
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Right Column: KHS View */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                {activeStudent ? (
+                  <div className="glass-card glow-cyan" style={{ padding: '24px' }}>
+                    
+                    {/* Student Information Header */}
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: '1fr 1fr', 
+                      gap: '16px', 
+                      fontSize: '13px', 
+                      background: 'rgba(255, 255, 255, 0.02)', 
+                      padding: '16px', 
+                      borderRadius: 'var(--radius-sm)', 
+                      border: '1px solid var(--glass-border)',
+                      marginBottom: '24px'
+                    }}>
+                      <div>Nama Lengkap: <strong style={{ color: 'var(--text-main)' }}>{activeStudent.nama}</strong></div>
+                      <div>Program Studi: <strong>{PRODI_MAP_FROM_DB[activeStudent.prodi_id] || '-'}</strong></div>
+                      <div>NIM: <strong style={{ color: 'var(--text-main)' }}>{activeStudent.nim_nip}</strong></div>
+                      <div>Kelas: <strong>{kelasList.find(c => c.id === activeStudent.kelas_id)?.nama || '-'}</strong></div>
+                      <div>Semester Aktif: <strong>Semester {kelasList.find(c => c.id === activeStudent.kelas_id)?.semester || '-'}</strong></div>
+                      <div>Dosen Wali: <strong>{rawUsersList.find(d => d.role === 'dosen' && d.id === activeStudent.dosen_utama_id)?.nama || '-'}</strong></div>
+                    </div>
+
+                    {/* Grades Table */}
+                    <div className="table-container">
+                      <table className="custom-table">
+                        <thead>
+                          <tr>
+                            <th style={{ width: '40px', textAlign: 'center' }}>No</th>
+                            <th style={{ width: '120px' }}>Kode MK</th>
+                            <th>Nama Mata Kuliah</th>
+                            <th style={{ width: '60px', textAlign: 'center' }}>SKS</th>
+                            <th style={{ width: '60px', textAlign: 'center' }}>Tugas</th>
+                            <th style={{ width: '60px', textAlign: 'center' }}>UTS</th>
+                            <th style={{ width: '60px', textAlign: 'center' }}>UAS</th>
+                            <th style={{ width: '60px', textAlign: 'center' }}>Praktek</th>
+                            <th style={{ width: '80px', textAlign: 'center' }}>N. Akhir</th>
+                            <th style={{ width: '60px', textAlign: 'center' }}>Grade</th>
+                            <th style={{ width: '60px', textAlign: 'center' }}>Bobot</th>
+                            <th style={{ width: '80px', textAlign: 'center' }}>SKS x B</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {studentGrades.map((g, idx) => {
+                            const weight = getBobot(g.nilai_huruf);
+                            return (
+                              <tr key={g.id || idx}>
+                                <td style={{ textAlign: 'center' }}>{idx + 1}</td>
+                                <td><span className="badge badge-info">{g.matakuliah_kode}</span></td>
+                                <td><strong>{g.nama_mk}</strong></td>
+                                <td style={{ textAlign: 'center' }}>{g.sks}</td>
+                                <td style={{ textAlign: 'center' }}>{g.tugas}</td>
+                                <td style={{ textAlign: 'center' }}>{g.uts}</td>
+                                <td style={{ textAlign: 'center' }}>{g.uas}</td>
+                                <td style={{ textAlign: 'center' }}>{g.praktek}</td>
+                                <td style={{ textAlign: 'center', fontWeight: 'bold', color: 'var(--accent)' }}>{g.nilai_akhir?.toFixed(1)}</td>
+                                <td style={{ textAlign: 'center' }}>
+                                  <span className={`badge ${g.nilai_huruf === 'A' ? 'badge-success' : g.nilai_huruf.startsWith('B') ? 'badge-primary' : 'badge-warning'}`}>
+                                    {g.nilai_huruf}
+                                  </span>
+                                </td>
+                                <td style={{ textAlign: 'center' }}>{weight.toFixed(1)}</td>
+                                <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{(g.sks * weight).toFixed(1)}</td>
+                              </tr>
+                            );
+                          })}
+                          {studentGrades.length === 0 && (
+                            <tr>
+                              <td colSpan="12" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '24px' }}>
+                                Belum ada data nilai KHS hasil ujian untuk mahasiswa ini.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                        {studentGrades.length > 0 && (
+                          <tfoot>
+                            <tr style={{ background: 'rgba(255, 255, 255, 0.02)', fontWeight: 'bold' }}>
+                              <td colSpan="3" style={{ textAlign: 'right', padding: '12px' }}>Total SKS Kumulatif & Bobot:</td>
+                              <td style={{ textAlign: 'center' }}>{totalSks} SKS</td>
+                              <td colSpan="7" style={{ textAlign: 'right' }}>Total SKS x Bobot:</td>
+                              <td style={{ textAlign: 'center' }}>{totalSksBobot.toFixed(1)}</td>
+                            </tr>
+                          </tfoot>
+                        )}
+                      </table>
+                    </div>
+
+                    {/* Summary Section */}
+                    {studentGrades.length > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
+                        <div style={{ 
+                          textAlign: 'center', 
+                          padding: '16px 32px', 
+                          background: 'rgba(6, 182, 212, 0.08)', 
+                          border: '1px solid var(--cyan)', 
+                          borderRadius: 'var(--radius-md)',
+                          boxShadow: '0 0 15px rgba(6, 182, 212, 0.1)'
+                        }}>
+                          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Indeks Prestasi Semester (IPS):</span>
+                          <div style={{ fontSize: '32px', fontWeight: '800', color: 'var(--cyan)', fontFamily: 'Outfit', marginTop: '4px' }}>
+                            {ips}
                           </div>
                         </div>
-                      ))
-                    ) : (
-                      <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px' }}>Bersih. Mahasiswa belum memiliki rekap catatan pelanggaran.</div>
+                      </div>
                     )}
+                    
                   </div>
-                </div>
-              ) : (
-                <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '40px' }}>
-                  Pilih Mahasiswa pada form di sebelah kiri untuk melihat rekap riwayat poin kepribadian asrama.
-                </div>
-              )}
+                ) : (
+                  <div className="glass-card" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+                    Pilih mahasiswa dari daftar di sebelah kiri untuk melihat rekap Kartu Hasil Studi (KHS).
+                  </div>
+                )}
+              </div>
+
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* 6. SETTINGS & SEMESTER CONFIG */}
       {activeMenu === 'semester' && (
@@ -1191,8 +1315,8 @@ export default function AdminPortal({
         <div className="animate-fade-in">
           <div className="page-header">
             <div>
-              <h2 className="page-title">Persetujuan Ka. Prodi</h2>
-              <p className="page-subtitle">Verifikasi akhir dan persetujuan Kartu Rencana Studi (KRS) taruna oleh Kepala Program Studi.</p>
+              <h2 className="page-title">Persetujuan KRS</h2>
+              <p className="page-subtitle">Verifikasi akhir dan persetujuan Kartu Rencana Studi (KRS) mahasiswa oleh Kepala Program Studi.</p>
             </div>
           </div>
 

@@ -287,26 +287,38 @@ export default function App() {
         console.warn("Could not sync KRS and attendance from Supabase:", e.message);
       }
 
-      // 6. Fetch Grades from hasil_ujian
+      // 6. Fetch Grades from hasil_ujian (synced with CAT)
       try {
-        const { data: examData } = await supabase.from('hasil_ujian').select('*');
-        if (examData && examData.length > 0) {
-          const { data: uData } = await supabase.from('users').select('*');
+        const { data: examData } = await supabase.from('hasil_ujian').select('id, jadwal_id, mahasiswa_id, nilai_final, nilai_tugas, nilai_uts, nilai_uas, nilai_praktek');
+        const { data: jData } = await supabase.from('jadwal_ujian').select('id, matkul_id');
+        const { data: mkData } = await supabase.from('mata_kuliah').select('id, kode, nama, sks, semester');
+        const { data: uData } = await supabase.from('users').select('*');
+
+        if (examData && jData && mkData && uData) {
           const mappedGrades = examData.map(g => {
-            const student = uData?.find(u => u.id === g.mahasiswa_id);
+            const student = uData.find(u => u.id === g.mahasiswa_id);
+            const j = jData.find(x => x.id === g.jadwal_id);
+            const mk = j ? mkData.find(x => x.id === j.matkul_id) : null;
+            
+            const tugas = g.nilai_tugas || 0;
+            const uts = g.nilai_uts || 0;
+            const uas = g.nilai_uas || 0;
+            const praktek = g.nilai_praktek || 0;
+            const finalScore = g.nilai_final !== null && g.nilai_final !== undefined ? g.nilai_final : ((tugas * 0.20) + (uts * 0.25) + (uas * 0.30) + (praktek * 0.25));
+
             return {
               id: g.id,
               nim: student ? student.nim_nip : '',
-              matakuliah_kode: 'DSNC4033', 
-              nama_mk: 'Sistem Navigasi Elektronik',
-              sks: 3,
-              semester: 4,
-              tugas: g.nilai_tugas || 0,
-              uts: g.nilai_uts || 0,
-              uas: g.nilai_uas || 0,
-              praktek: g.nilai_praktek || 0,
-              nilai_akhir: g.nilai_final || 0,
-              nilai_huruf: g.nilai_final >= 85 ? 'A' : g.nilai_final >= 78 ? 'B+' : g.nilai_final >= 70 ? 'B' : g.nilai_final >= 60 ? 'C+' : g.nilai_final >= 50 ? 'C' : g.nilai_final >= 40 ? 'D' : 'E'
+              matakuliah_kode: mk ? mk.kode : '',
+              nama_mk: mk ? mk.nama : 'Mata Kuliah',
+              sks: mk ? mk.sks : 2,
+              semester: mk ? mk.semester : 1,
+              tugas: tugas,
+              uts: uts,
+              uas: uas,
+              praktek: praktek,
+              nilai_akhir: finalScore,
+              nilai_huruf: finalScore >= 85 ? 'A' : finalScore >= 78 ? 'B+' : finalScore >= 70 ? 'B' : finalScore >= 60 ? 'C+' : finalScore >= 50 ? 'C' : finalScore >= 40 ? 'D' : 'E'
             };
           });
           setNilaiList(mappedGrades);
@@ -1157,6 +1169,7 @@ export default function App() {
             matakuliahList={matakuliahList}
             kelasList={kelasList}
             krsList={krsList}
+            nilaiList={nilaiList}
             settings={settings}
             onUpdateSettings={handleUpdateSettings}
             onAddTaruna={handleAddTaruna}

@@ -49,8 +49,8 @@ export default function Sidebar({
           { id: 'matakuliah', label: 'Mata Kuliah', icon: BookOpen },
           { id: 'jadwal-pembelajaran', label: 'Jadwal Pembelajaran', icon: Calendar },
           { id: 'dosen-pembimbing', label: 'Dosen Pembimbing Akademik', icon: UserCheck },
-          { id: 'krs-prodi', label: 'Persetujuan Ka. Prodi', icon: UserCheck },
-          { id: 'poin', label: 'Kemahasiswaan (Poin)', icon: ShieldAlert },
+          { id: 'krs-prodi', label: 'Persetujuan KRS', icon: UserCheck },
+          { id: 'khs-admin', label: 'Kartu Hasil Semester (KHS)', icon: Award },
           { id: 'semester', label: 'Pengaturan', icon: SettingsIcon }
         ];
       case 'keuangan':
