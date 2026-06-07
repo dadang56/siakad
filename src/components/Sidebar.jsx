@@ -44,9 +44,11 @@ export default function Sidebar({
       case 'admin_prodi':
         return [
           { id: 'dashboard', label: 'Dashboard Admin', icon: LayoutDashboard },
-          { id: 'taruna', label: 'Kelola Mahasiswa', icon: Users },
-          { id: 'dosen', label: 'Kelola Dosen', icon: GraduationCap },
+          { id: 'users', label: 'Manajemen User', icon: Users },
+          { id: 'kelas', label: 'Kelas', icon: GraduationCap },
           { id: 'matakuliah', label: 'Mata Kuliah', icon: BookOpen },
+          { id: 'jadwal-pembelajaran', label: 'Jadwal Pembelajaran', icon: Calendar },
+          { id: 'dosen-pembimbing', label: 'Dosen Pembimbing Akademik', icon: UserCheck },
           { id: 'krs-prodi', label: 'Persetujuan Ka. Prodi', icon: UserCheck },
           { id: 'poin', label: 'Kemahasiswaan (Poin)', icon: ShieldAlert },
           { id: 'semester', label: 'Pengaturan', icon: SettingsIcon }

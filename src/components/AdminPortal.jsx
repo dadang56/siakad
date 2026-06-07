@@ -38,9 +38,35 @@ export default function AdminPortal({
   onSyncMk,
   onApproveKrs,
   currentRole = 'admin',
-  adminProdiDept = null
+  adminProdiDept = null,
+  
+  rawUsersList = [],
+  jadwalPembelajaranList = [],
+  onAddUser,
+  onEditUser,
+  onDeleteUser,
+  onAddKelas,
+  onEditKelas,
+  onDeleteKelas,
+  onAddJadwal,
+  onEditJadwal,
+  onDeleteJadwal,
+  onAssignBimbingan,
+  onRemoveBimbingan
 }) {
   
+  const PRODI_MAP_TO_DB = {
+    'D-III Nautika': 'ffe7ed2a-97b6-458b-9fc7-4d9b62e04efb',
+    'D-III Permesinan Kapal': '39ae54ce-9e86-4b99-943e-53437403e32d',
+    'D-III Manajemen Transportasi Perairan Daratan (MTPD)': '2df63354-d49e-4f31-88aa-513509e22954'
+  };
+
+  const PRODI_MAP_FROM_DB = {
+    'ffe7ed2a-97b6-458b-9fc7-4d9b62e04efb': 'D-III Nautika',
+    '39ae54ce-9e86-4b99-943e-53437403e32d': 'D-III Permesinan Kapal',
+    '2df63354-d49e-4f31-88aa-513509e22954': 'D-III Manajemen Transportasi Perairan Daratan (MTPD)'
+  };
+
   // Group or filter data based on prodi for Admin Prodi
   const filteredTarunaList = currentRole === 'admin_prodi' && adminProdiDept
     ? tarunaList.filter(t => t.prodi === adminProdiDept)
@@ -60,6 +86,21 @@ export default function AdminPortal({
         return student && student.prodi === adminProdiDept;
       })
     : krsList;
+
+  const filteredUsersList = currentRole === 'admin_prodi' && adminProdiDept
+    ? rawUsersList.filter(u => u.prodi_id === PRODI_MAP_TO_DB[adminProdiDept])
+    : rawUsersList;
+
+  const filteredKelasList = currentRole === 'admin_prodi' && adminProdiDept
+    ? kelasList.filter(k => k.prodi_id === PRODI_MAP_TO_DB[adminProdiDept])
+    : kelasList;
+
+  const filteredJadwalList = currentRole === 'admin_prodi' && adminProdiDept
+    ? jadwalPembelajaranList.filter(j => {
+        const cl = kelasList.find(c => c.id === j.kelas_id);
+        return cl && cl.prodi_id === PRODI_MAP_TO_DB[adminProdiDept];
+      })
+    : jadwalPembelajaranList;
 
   // Modals state
   const [showTarunaModal, setShowTarunaModal] = useState(false);
@@ -87,6 +128,129 @@ export default function AdminPortal({
   const [targetTaruna, setTargetTaruna] = useState({ nim: '', nama: '', prodi: 'D-III Nautika', semester: 1, kelas: '', email: '', ipk: 0, ips_prev: 0, status_ukt: 'Lunas', angkatan: '2026', dosen_wali_nidn: '' });
   const [targetDosen, setTargetDosen] = useState({ nidn: '', nama: '', prodi: 'D-III Nautika', email: '', telepon: '', status: 'Dosen Tetap' });
   const [targetMk, setTargetMk] = useState({ kode: '', nama: '', sks: 2, semester: 1, prodi: 'D-III Nautika' });
+
+  // New Modals state
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [showKelasModal, setShowKelasModal] = useState(false);
+  const [showJadwalModal, setShowJadwalModal] = useState(false);
+
+  // New Search & Filter states
+  const [userSearch, setUserSearch] = useState('');
+  const [userFilterRole, setUserFilterRole] = useState('Semua Role');
+  const [userFilterProdi, setUserFilterProdi] = useState('Semua Prodi');
+  const [userFilterKelas, setUserFilterKelas] = useState('Semua Kelas');
+  const [kelasSearch, setKelasSearch] = useState('');
+  const [jadwalSearch, setJadwalSearch] = useState('');
+
+  // New Target states
+  const [targetUser, setTargetUser] = useState({ id: null, nim_nip: '', username: '', nama: '', password: '', role: 'mahasiswa', prodi_id: 'ffe7ed2a-97b6-458b-9fc7-4d9b62e04efb', kelas_id: '', email: '', no_hp: '', is_active: true });
+  const [targetKelas, setTargetKelas] = useState({ id: null, nama: '', prodi_id: 'ffe7ed2a-97b6-458b-9fc7-4d9b62e04efb', angkatan: 36, semester: 1 });
+  const [targetJadwal, setTargetJadwal] = useState({ id: null, kelas_id: '', mata_kuliah_id: '', dosen_id: '', hari: 'Senin', jam_mulai: '08:00:00', jam_selesai: '10:00:00', ruangan: '' });
+  
+  const [activeDosenForBimbingan, setActiveDosenForBimbingan] = useState(null);
+  const [bimbinganSearchQuery, setBimbinganSearchQuery] = useState('');
+  const [selectedBimbinganStudentId, setSelectedBimbinganStudentId] = useState('');
+
+  // Reset target forms
+  const resetUserForm = () => setTargetUser({ id: null, nim_nip: '', username: '', nama: '', password: '', role: 'mahasiswa', prodi_id: currentRole === 'admin_prodi' ? PRODI_MAP_TO_DB[adminProdiDept] : 'ffe7ed2a-97b6-458b-9fc7-4d9b62e04efb', kelas_id: '', email: '', no_hp: '', is_active: true });
+  const resetKelasForm = () => setTargetKelas({ id: null, nama: '', prodi_id: currentRole === 'admin_prodi' ? PRODI_MAP_TO_DB[adminProdiDept] : 'ffe7ed2a-97b6-458b-9fc7-4d9b62e04efb', angkatan: 36, semester: 1 });
+  const resetJadwalForm = () => setTargetJadwal({ id: null, kelas_id: filteredKelasList[0]?.id || '', mata_kuliah_id: filteredMatakuliahList[0]?.id || '', dosen_id: rawUsersList.find(u => u.role === 'dosen')?.id || '', hari: 'Senin', jam_mulai: '08:00:00', jam_selesai: '10:00:00', ruangan: '' });
+
+  // === User CRUD handlers ===
+  const handleOpenAddUser = () => {
+    setModalType('add');
+    resetUserForm();
+    setShowUserModal(true);
+  };
+
+  const handleOpenEditUser = (user) => {
+    setModalType('edit');
+    setTargetUser({
+      id: user.id,
+      nim_nip: user.nim_nip,
+      username: user.username || '',
+      nama: user.nama,
+      password: user.password || '',
+      role: user.role,
+      prodi_id: user.prodi_id || '',
+      kelas_id: user.kelas_id || '',
+      email: user.email || '',
+      no_hp: user.no_hp || '',
+      is_active: user.is_active !== false
+    });
+    setShowUserModal(true);
+  };
+
+  const handleSaveUserSubmit = (e) => {
+    e.preventDefault();
+    if (modalType === 'add') {
+      onAddUser(targetUser);
+    } else {
+      onEditUser(targetUser);
+    }
+    setShowUserModal(false);
+  };
+
+  // === Kelas CRUD handlers ===
+  const handleOpenAddKelas = () => {
+    setModalType('add');
+    resetKelasForm();
+    setShowKelasModal(true);
+  };
+
+  const handleOpenEditKelas = (kelasObj) => {
+    setModalType('edit');
+    setTargetKelas({
+      id: kelasObj.id,
+      nama: kelasObj.nama,
+      prodi_id: kelasObj.prodi_id,
+      angkatan: kelasObj.angkatan,
+      semester: kelasObj.semester
+    });
+    setShowKelasModal(true);
+  };
+
+  const handleSaveKelasSubmit = (e) => {
+    e.preventDefault();
+    if (modalType === 'add') {
+      onAddKelas(targetKelas);
+    } else {
+      onEditKelas(targetKelas);
+    }
+    setShowKelasModal(false);
+  };
+
+  // === Jadwal CRUD handlers ===
+  const handleOpenAddJadwal = () => {
+    setModalType('add');
+    resetJadwalForm();
+    setShowJadwalModal(true);
+  };
+
+  const handleOpenEditJadwal = (jadwalObj) => {
+    setModalType('edit');
+    setTargetJadwal({
+      id: jadwalObj.id,
+      kelas_id: jadwalObj.kelas_id,
+      mata_kuliah_id: jadwalObj.mata_kuliah_id,
+      dosen_id: jadwalObj.dosen_id,
+      hari: jadwalObj.hari,
+      jam_mulai: jadwalObj.jam_mulai,
+      jam_selesai: jadwalObj.jam_selesai,
+      ruangan: jadwalObj.ruangan
+    });
+    setShowJadwalModal(true);
+  };
+
+  const handleSaveJadwalSubmit = (e) => {
+    e.preventDefault();
+    if (modalType === 'add') {
+      onAddJadwal(targetJadwal);
+    } else {
+      onEditJadwal(targetJadwal);
+    }
+    setShowJadwalModal(false);
+  };
 
   // Poin state
   const [selectedTarunaNim, setSelectedTarunaNim] = useState('');
@@ -341,69 +505,185 @@ export default function AdminPortal({
         </div>
       )}
 
-      {/* 2. KELOLA TARUNA */}
-      {activeMenu === 'taruna' && (
+      {/* 2. MANAJEMEN USER */}
+      {activeMenu === 'users' && (
         <div className="animate-fade-in">
           <div className="page-header">
             <div>
-              <h2 className="page-title">Manajemen Data Mahasiswa</h2>
+              <h2 className="page-title">Manajemen User</h2>
               <p className="page-subtitle">
                 {currentRole === 'admin' 
-                  ? 'Melihat daftar biodata serta status akademik Mahasiswa (BAK Monitoring).' 
-                  : `Kelola biodata serta status akademik Mahasiswa pada Program Studi ${adminProdiDept}.`}
+                  ? 'Melihat daftar pengguna sistem CAT, LMS, dan SIAKAD (BAK Monitoring).' 
+                  : `Kelola data pengguna sistem pada Program Studi ${adminProdiDept}.`}
               </p>
             </div>
             {currentRole !== 'admin' && (
-              <button onClick={handleOpenAddTaruna} className="btn btn-primary btn-sm">
-                <Plus className="menu-icon" /> Tambah Mahasiswa Baru
+              <button onClick={handleOpenAddUser} className="btn btn-primary btn-sm">
+                <Plus className="menu-icon" /> Tambah User Baru
               </button>
             )}
           </div>
 
+          {/* Quick Stats Grid */}
+          <div className="metrics-grid" style={{ marginBottom: '24px' }}>
+            <div className="glass-card metric-card glow-blue">
+              <div className="metric-icon-wrapper blue">
+                <Users />
+              </div>
+              <div className="metric-content">
+                <span className="metric-value">{filteredUsersList.length} User</span>
+                <span className="metric-label">Total User Terdaftar</span>
+              </div>
+            </div>
+            <div className="glass-card metric-card glow-cyan">
+              <div className="metric-icon-wrapper cyan">
+                <Users />
+              </div>
+              <div className="metric-content">
+                <span className="metric-value">{filteredUsersList.filter(u => u.role === 'mahasiswa').length} Mahasiswa</span>
+                <span className="metric-label">Jumlah Mahasiswa</span>
+              </div>
+            </div>
+            <div className="glass-card metric-card glow-gold">
+              <div className="metric-icon-wrapper gold">
+                <Users />
+              </div>
+              <div className="metric-content">
+                <span className="metric-value">{filteredUsersList.filter(u => u.role === 'dosen').length} Dosen</span>
+                <span className="metric-label">Jumlah Dosen</span>
+              </div>
+            </div>
+            <div className="glass-card metric-card">
+              <div className="metric-icon-wrapper success">
+                <Users />
+              </div>
+              <div className="metric-content">
+                <span className="metric-value">{filteredUsersList.filter(u => u.is_active !== false).length} Aktif</span>
+                <span className="metric-label">User Status Aktif</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Filters Row */}
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
+            <input 
+              type="text" 
+              placeholder="Cari nama, email, atau NIM/NIP..." 
+              value={userSearch}
+              onChange={(e) => setUserSearch(e.target.value)}
+              className="form-control"
+              style={{ flex: 2, minWidth: '200px' }}
+            />
+            <select 
+              value={userFilterRole} 
+              onChange={(e) => setUserFilterRole(e.target.value)}
+              className="form-control"
+              style={{ flex: 1, minWidth: '120px' }}
+            >
+              <option value="Semua Role">Semua Role</option>
+              <option value="mahasiswa">Mahasiswa</option>
+              <option value="dosen">Dosen</option>
+              <option value="admin_prodi">Admin Prodi</option>
+              <option value="superadmin">Superadmin</option>
+              <option value="pengawas">Pengawas</option>
+              <option value="pusbangkatar">Pusbangkatar</option>
+            </select>
+            
+            {currentRole !== 'admin_prodi' ? (
+              <select 
+                value={userFilterProdi} 
+                onChange={(e) => {
+                  setUserFilterProdi(e.target.value);
+                  setUserFilterKelas('Semua Kelas');
+                }}
+                className="form-control"
+                style={{ flex: 1, minWidth: '150px' }}
+              >
+                <option value="Semua Prodi">Semua Prodi</option>
+                <option value="D-III Nautika">D-III Nautika</option>
+                <option value="D-III Permesinan Kapal">D-III Permesinan Kapal</option>
+                <option value="D-III Manajemen Transportasi Perairan Daratan (MTPD)">D-III MTPD</option>
+              </select>
+            ) : null}
+
+            <select 
+              value={userFilterKelas} 
+              onChange={(e) => setUserFilterKelas(e.target.value)}
+              className="form-control"
+              style={{ flex: 1, minWidth: '120px' }}
+            >
+              <option value="Semua Kelas">Semua Kelas</option>
+              {filteredKelasList
+                .filter(c => userFilterProdi === 'Semua Prodi' || c.prodi_id === PRODI_MAP_TO_DB[userFilterProdi])
+                .map(c => (
+                  <option key={c.id} value={c.id}>{c.nama}</option>
+                ))}
+            </select>
+          </div>
+
+          {/* User List Table */}
           <div className="glass-card glow-blue">
             <div className="table-container">
               <table className="custom-table">
                 <thead>
                   <tr>
-                    <th>NIM</th>
-                    <th>Nama Mahasiswa</th>
-                    <th>Program Studi</th>
-                    <th>Angkatan / Smt</th>
-                    <th>Dosen Wali</th>
-                    <th>Keuangan (UKT)</th>
-                    <th style={{ textAlign: 'center' }}>{currentRole === 'admin' ? 'Status' : 'Aksi'}</th>
+                    <th>Nama</th>
+                    <th>Username</th>
+                    <th>NIM/NIP</th>
+                    <th>Prodi / Kelas</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th style={{ textAlign: 'center' }}>Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredTarunaList.map((taruna) => {
-                    const wali = filteredDosenList.find(d => d.nidn === taruna.dosen_wali_nidn);
+                  {filteredUsersList.filter(u => {
+                    const matchesSearch = userSearch === '' || 
+                      u.nama?.toLowerCase().includes(userSearch.toLowerCase()) ||
+                      u.email?.toLowerCase().includes(userSearch.toLowerCase()) ||
+                      u.username?.toLowerCase().includes(userSearch.toLowerCase()) ||
+                      u.nim_nip?.toLowerCase().includes(userSearch.toLowerCase());
+                      
+                    const matchesRole = userFilterRole === 'Semua Role' || u.role === userFilterRole;
+                    const matchesProdi = userFilterProdi === 'Semua Prodi' || u.prodi_id === PRODI_MAP_TO_DB[userFilterProdi];
+                    const matchesKelas = userFilterKelas === 'Semua Kelas' || u.kelas_id === userFilterKelas;
+                    
+                    return matchesSearch && matchesRole && matchesProdi && matchesKelas;
+                  }).map((user) => {
+                    const userProdi = PRODI_MAP_FROM_DB[user.prodi_id] || '-';
+                    const userKelas = kelasList.find(c => c.id === user.kelas_id)?.nama || '-';
+                    const prodiKelasLabel = user.role === 'mahasiswa' 
+                      ? `${userProdi} / ${userKelas}`
+                      : userProdi;
+                    
                     return (
-                      <tr key={taruna.nim}>
-                        <td><strong>{taruna.nim}</strong></td>
+                      <tr key={user.id}>
+                        <td><strong>{user.nama}</strong><div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{user.email || '-'}</div></td>
+                        <td>{user.username || user.nim_nip}</td>
+                        <td>{user.nim_nip}</td>
+                        <td>{prodiKelasLabel}</td>
                         <td>
-                          <div>{taruna.nama}</div>
-                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{taruna.email}</span>
+                          <span className={`badge ${user.role === 'mahasiswa' ? 'badge-info' : user.role === 'dosen' ? 'badge-primary' : 'badge-warning'}`}>
+                            {user.role?.toUpperCase()}
+                          </span>
                         </td>
-                        <td>{taruna.prodi}</td>
-                        <td>Th {taruna.angkatan} / Smt {taruna.semester}</td>
-                        <td style={{ fontSize: '13px' }}>{wali?.nama || '-'}</td>
                         <td>
-                          <span className={`badge ${taruna.status_ukt === 'Lunas' ? 'badge-success' : 'badge-danger'}`}>
-                            {taruna.status_ukt}
+                          <span className={`badge ${user.is_active !== false ? 'badge-success' : 'badge-danger'}`}>
+                            {user.is_active !== false ? 'Aktif' : 'Nonaktif'}
                           </span>
                         </td>
                         <td style={{ textAlign: 'center' }}>
                           {currentRole !== 'admin' ? (
                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                              <button onClick={() => handleOpenEditTaruna(taruna)} className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }}>
+                              <button onClick={() => handleOpenEditUser(user)} className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }}>
                                 <Edit style={{ width: '14px', height: '14px' }} />
                               </button>
-                              <button onClick={() => { if(confirm('Hapus Mahasiswa ini?')) onDeleteTaruna(taruna.nim) }} className="btn btn-danger btn-sm" style={{ padding: '4px 8px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                              <button onClick={() => { if(confirm('Hapus user ini?')) onDeleteUser(user.id) }} className="btn btn-danger btn-sm" style={{ padding: '4px 8px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
                                 <Trash style={{ width: '14px', height: '14px' }} />
                               </button>
                             </div>
                           ) : (
-                            <span className="badge badge-info" style={{ textTransform: 'none' }}>Terverifikasi</span>
+                            <span className="badge badge-info">Monitoring</span>
                           )}
                         </td>
                       </tr>
@@ -416,21 +696,21 @@ export default function AdminPortal({
         </div>
       )}
 
-      {/* 3. KELOLA DOSEN */}
-      {activeMenu === 'dosen' && (
+      {/* 2b. KELOLA KELAS */}
+      {activeMenu === 'kelas' && (
         <div className="animate-fade-in">
           <div className="page-header">
             <div>
-              <h2 className="page-title">Manajemen Data Dosen</h2>
+              <h2 className="page-title">Manajemen Kelas</h2>
               <p className="page-subtitle">
                 {currentRole === 'admin' 
-                  ? 'Melihat daftar dosen pengampu mata kuliah & pembimbing perwalian (BAK Monitoring).' 
-                  : `Kelola data dosen pengampu & wali pada Program Studi ${adminProdiDept}.`}
+                  ? 'Melihat daftar kelas yang terdaftar (BAK Monitoring).' 
+                  : `Kelola data kelas untuk Program Studi ${adminProdiDept}.`}
               </p>
             </div>
             {currentRole !== 'admin' && (
-              <button onClick={handleOpenAddDosen} className="btn btn-primary btn-sm">
-                <Plus className="menu-icon" /> Tambah Dosen Baru
+              <button onClick={handleOpenAddKelas} className="btn btn-primary btn-sm">
+                <Plus className="menu-icon" /> Tambah Kelas Baru
               </button>
             )}
           </div>
@@ -440,49 +720,318 @@ export default function AdminPortal({
               <table className="custom-table">
                 <thead>
                   <tr>
-                    <th>NIDN</th>
-                    <th>Nama Lengkap</th>
+                    <th>Nama Kelas</th>
                     <th>Program Studi</th>
-                    <th>Email</th>
-                    <th>Kontak / Telp</th>
-                    <th>Status</th>
-                    <th style={{ textAlign: 'center' }}>{currentRole === 'admin' ? 'Keterangan' : 'Aksi'}</th>
+                    <th style={{ textAlign: 'center' }}>Angkatan</th>
+                    <th style={{ textAlign: 'center' }}>Semester</th>
+                    {currentRole !== 'admin' && <th style={{ textAlign: 'center' }}>Aksi</th>}
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredDosenList.map((dosen) => (
-                    <tr key={dosen.nidn}>
-                      <td><strong>{dosen.nidn}</strong></td>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          {dosen.foto && <img src={dosen.foto} alt="" style={{ width: '28px', height: '28px', borderRadius: '50%' }} />}
-                          <strong>{dosen.nama}</strong>
-                        </div>
-                      </td>
-                      <td>{dosen.prodi}</td>
-                      <td>{dosen.email}</td>
-                      <td>{dosen.telepon}</td>
-                      <td><span className="badge badge-info">{dosen.status}</span></td>
-                      <td style={{ textAlign: 'center' }}>
-                        {currentRole !== 'admin' ? (
+                  {filteredKelasList.map((c) => (
+                    <tr key={c.id}>
+                      <td><strong>{c.nama}</strong></td>
+                      <td>{PRODI_MAP_FROM_DB[c.prodi_id] || '-'}</td>
+                      <td style={{ textAlign: 'center' }}>Angkatan {c.angkatan}</td>
+                      <td style={{ textAlign: 'center' }}>Smt {c.semester}</td>
+                      {currentRole !== 'admin' && (
+                        <td style={{ textAlign: 'center' }}>
                           <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                            <button onClick={() => handleOpenEditDosen(dosen)} className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }}>
+                            <button onClick={() => handleOpenEditKelas(c)} className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }}>
                               <Edit style={{ width: '14px', height: '14px' }} />
                             </button>
-                            <button onClick={() => { if(confirm('Hapus Dosen ini?')) onDeleteDosen(dosen.nidn) }} className="btn btn-danger btn-sm" style={{ padding: '4px 8px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                            <button onClick={() => { if(confirm('Hapus kelas ini?')) onDeleteKelas(c.id) }} className="btn btn-danger btn-sm" style={{ padding: '4px 8px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
                               <Trash style={{ width: '14px', height: '14px' }} />
                             </button>
                           </div>
-                        ) : (
-                          <span className="badge badge-primary" style={{ textTransform: 'none' }}>Aktif</span>
-                        )}
-                      </td>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* 2c. JADWAL PEMBELAJARAN */}
+      {activeMenu === 'jadwal-pembelajaran' && (
+        <div className="animate-fade-in">
+          <div className="page-header">
+            <div>
+              <h2 className="page-title">Jadwal Pembelajaran</h2>
+              <p className="page-subtitle">Sinkronisasi jadwal kelas mingguan dengan database LMS.</p>
+            </div>
+            {currentRole !== 'admin' && (
+              <button onClick={handleOpenAddJadwal} className="btn btn-primary btn-sm">
+                <Plus className="menu-icon" /> Tambah Jadwal Baru
+              </button>
+            )}
+          </div>
+
+          <div className="glass-card glow-gold">
+            <div className="table-container">
+              <table className="custom-table">
+                <thead>
+                  <tr>
+                    <th>Mata Kuliah</th>
+                    <th>Kelas</th>
+                    <th>Dosen Pengampu</th>
+                    <th>Hari</th>
+                    <th>Waktu Kuliah</th>
+                    <th>Ruangan</th>
+                    {currentRole !== 'admin' && <th style={{ textAlign: 'center' }}>Aksi</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredJadwalList.map((j) => {
+                    const mk = matakuliahList.find(m => m.id === j.mata_kuliah_id || m.kode === j.mata_kuliah_kode);
+                    const kl = kelasList.find(c => c.id === j.kelas_id);
+                    const dosen = rawUsersList.find(u => u.id === j.dosen_id);
+                    return (
+                      <tr key={j.id}>
+                        <td><strong>{mk?.nama || 'Unknown Matkul'}</strong><div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{mk?.kode}</div></td>
+                        <td>{kl?.nama || 'Unknown Kelas'}</td>
+                        <td>{dosen?.nama || 'Unknown Dosen'}</td>
+                        <td><strong>{j.hari}</strong></td>
+                        <td>{j.jam_mulai?.substring(0, 5)} - {j.jam_selesai?.substring(0, 5)}</td>
+                        <td><span className="badge badge-info">{j.ruangan}</span></td>
+                        {currentRole !== 'admin' && (
+                          <td style={{ textAlign: 'center' }}>
+                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                              <button onClick={() => handleOpenEditJadwal(j)} className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }}>
+                                <Edit style={{ width: '14px', height: '14px' }} />
+                              </button>
+                              <button onClick={() => { if(confirm('Hapus jadwal ini?')) onDeleteJadwal(j.id) }} className="btn btn-danger btn-sm" style={{ padding: '4px 8px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                                <Trash style={{ width: '14px', height: '14px' }} />
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2d. DOSEN PEMBIMBING AKADEMIK */}
+      {activeMenu === 'dosen-pembimbing' && (
+        <div className="animate-fade-in">
+          <div className="page-header">
+            <div>
+              <h2 className="page-title">Kelola Dosen Pembimbing Akademik</h2>
+              <p className="page-subtitle">Daftar dosen pembimbing akademik dari seluruh program studi.</p>
+            </div>
+          </div>
+
+          <div className="glass-card glow-blue">
+            <div className="table-container">
+              <table className="custom-table">
+                <thead>
+                  <tr>
+                    <th>NIP / NIDN</th>
+                    <th>Nama Dosen</th>
+                    <th>Program Studi</th>
+                    <th style={{ textAlign: 'center' }}>Jumlah Mahasiswa Bimbingan</th>
+                    <th style={{ textAlign: 'center' }}>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rawUsersList.filter(u => u.role === 'dosen').map((dosen) => {
+                    const countBimbingan = rawUsersList.filter(u => u.role === 'mahasiswa' && u.dosen_utama_id === dosen.id).length;
+                    return (
+                      <tr key={dosen.id}>
+                        <td><strong>{dosen.nim_nip}</strong></td>
+                        <td><strong>{dosen.nama}</strong><div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{dosen.email}</div></td>
+                        <td>{PRODI_MAP_FROM_DB[dosen.prodi_id] || '-'}</td>
+                        <td style={{ textAlign: 'center' }}>
+                          <span className="badge badge-warning" style={{ fontSize: '13px' }}>
+                            {countBimbingan} Mahasiswa
+                          </span>
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <button 
+                            onClick={() => {
+                              setActiveDosenForBimbingan(dosen);
+                              setBimbinganSearchQuery('');
+                              setSelectedBimbinganStudentId('');
+                            }}
+                            className="btn btn-primary btn-sm"
+                          >
+                            Kelola Bimbingan
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Sub-view: Kelola Bimbingan Dosen */}
+          {activeDosenForBimbingan && (
+            <div className="modal-overlay" style={{ display: 'flex' }}>
+              <div className="modal-content" style={{ maxWidth: '750px', width: '90%' }}>
+                <div className="modal-header">
+                  <h3>Bimbingan Akademik: {activeDosenForBimbingan.nama}</h3>
+                  <button onClick={() => setActiveDosenForBimbingan(null)} className="btn-close">✕</button>
+                </div>
+                <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                  
+                  {/* Search and assign student form */}
+                  {currentRole !== 'admin' && (
+                    <div className="glass-card" style={{ marginBottom: '20px', padding: '16px', background: 'rgba(255, 255, 255, 0.02)' }}>
+                      <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Assign Mahasiswa Bimbingan Baru</h4>
+                      
+                      <div style={{ display: 'flex', gap: '12px' }}>
+                        <div style={{ flex: 1, position: 'relative' }}>
+                          <input 
+                            type="text" 
+                            placeholder="Cari mahasiswa berdasarkan Nama atau NIM..." 
+                            value={bimbinganSearchQuery}
+                            onChange={(e) => setBimbinganSearchQuery(e.target.value)}
+                            className="form-control"
+                          />
+                          
+                          {/* Autocomplete list based on bimbinganSearchQuery */}
+                          {bimbinganSearchQuery.trim() !== '' && (
+                            <div style={{ 
+                              position: 'absolute', 
+                              top: '100%', 
+                              left: 0, 
+                              right: 0, 
+                              background: 'var(--bg-secondary)', 
+                              border: '1px solid var(--glass-border)', 
+                              borderRadius: 'var(--radius-sm)', 
+                              zIndex: 1000,
+                              maxHeight: '200px',
+                              overflowY: 'auto',
+                              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
+                            }}>
+                              {rawUsersList
+                                .filter(u => u.role === 'mahasiswa' && u.dosen_utama_id !== activeDosenForBimbingan.id)
+                                .filter(u => 
+                                  u.nama?.toLowerCase().includes(bimbinganSearchQuery.toLowerCase()) || 
+                                  u.nim_nip?.toLowerCase().includes(bimbinganSearchQuery.toLowerCase())
+                                )
+                                .slice(0, 8)
+                                .map(s => (
+                                  <div 
+                                    key={s.id}
+                                    onClick={() => {
+                                      setSelectedBimbinganStudentId(s.id);
+                                      setBimbinganSearchQuery(`${s.nim_nip} - ${s.nama}`);
+                                    }}
+                                    style={{ 
+                                      padding: '8px 12px', 
+                                      cursor: 'pointer',
+                                      borderBottom: '1px solid var(--glass-border)'
+                                    }}
+                                    className="hover-bg-accent"
+                                  >
+                                    <strong>{s.nim_nip}</strong> | {s.nama} ({PRODI_MAP_FROM_DB[s.prodi_id] || '-'})
+                                  </div>
+                                ))}
+                              {rawUsersList
+                                .filter(u => u.role === 'mahasiswa' && u.dosen_utama_id !== activeDosenForBimbingan.id)
+                                .filter(u => 
+                                  u.nama?.toLowerCase().includes(bimbinganSearchQuery.toLowerCase()) || 
+                                  u.nim_nip?.toLowerCase().includes(bimbinganSearchQuery.toLowerCase())
+                                ).length === 0 && (
+                                  <div style={{ padding: '8px 12px', color: 'var(--text-muted)' }}>Tidak ditemukan mahasiswa yang cocok</div>
+                                )}
+                            </div>
+                          )}
+                        </div>
+                        
+                        <button 
+                          onClick={() => {
+                            if (selectedBimbinganStudentId) {
+                              onAssignBimbingan(selectedBimbinganStudentId, activeDosenForBimbingan.id);
+                              setBimbinganSearchQuery('');
+                              setSelectedBimbinganStudentId('');
+                            } else {
+                              alert('Pilih mahasiswa dari daftar hasil pencarian.');
+                            }
+                          }}
+                          className="btn btn-primary"
+                          style={{ whiteSpace: 'nowrap' }}
+                        >
+                          Tambahkan
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* List of currently assigned students */}
+                  <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '12px' }}>Daftar Mahasiswa Bimbingan Saat Ini</h4>
+                  
+                  <div className="table-container">
+                    <table className="custom-table">
+                      <thead>
+                        <tr>
+                          <th>NIM</th>
+                          <th>Nama Mahasiswa</th>
+                          <th>Program Studi / Kelas</th>
+                          {currentRole !== 'admin' && <th style={{ textAlign: 'center' }}>Aksi</th>}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rawUsersList
+                          .filter(u => u.role === 'mahasiswa' && u.dosen_utama_id === activeDosenForBimbingan.id)
+                          .length === 0 ? (
+                            <tr>
+                              <td colSpan={currentRole !== 'admin' ? "4" : "3"} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px' }}>
+                                Belum ada mahasiswa bimbingan yang ditugaskan ke dosen ini.
+                              </td>
+                            </tr>
+                          ) : (
+                            rawUsersList
+                              .filter(u => u.role === 'mahasiswa' && u.dosen_utama_id === activeDosenForBimbingan.id)
+                              .map(s => {
+                                const userProdi = PRODI_MAP_FROM_DB[s.prodi_id] || '-';
+                                const userKelas = kelasList.find(c => c.id === s.kelas_id)?.nama || '-';
+                                return (
+                                  <tr key={s.id}>
+                                    <td>{s.nim_nip}</td>
+                                    <td><strong>{s.nama}</strong></td>
+                                    <td>{userProdi} / {userKelas}</td>
+                                    {currentRole !== 'admin' && (
+                                      <td style={{ textAlign: 'center' }}>
+                                        <button 
+                                          onClick={() => {
+                                            if (confirm(`Hapus bimbingan mahasiswa ${s.nama} dari dosen ini?`)) {
+                                              onRemoveBimbingan(s.id);
+                                            }
+                                          }}
+                                          className="btn btn-danger btn-sm"
+                                          style={{ padding: '4px 10px', background: 'rgba(239, 68, 68, 0.15)', color: 'var(--danger)', border: '1px solid rgba(239, 68, 68, 0.3)' }}
+                                        >
+                                          Hapus
+                                        </button>
+                                      </td>
+                                    )}
+                                  </tr>
+                                );
+                              })
+                          )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                </div>
+                <div className="modal-footer">
+                  <button className="btn btn-secondary btn-sm" onClick={() => setActiveDosenForBimbingan(null)}>Tutup</button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1198,6 +1747,341 @@ export default function AdminPortal({
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowMkModal(false)}>Batal</button>
+                <button type="submit" className="btn btn-primary btn-sm">Simpan</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* USER MODAL */}
+      {showUserModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h3>{modalType === 'add' ? 'Tambah User Baru' : 'Edit User'}</h3>
+              <button onClick={() => setShowUserModal(false)} className="btn-close">✕</button>
+            </div>
+            <form onSubmit={handleSaveUserSubmit}>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label className="form-label">Nomor Induk (NIM/NIP):</label>
+                  <input 
+                    type="text" 
+                    value={targetUser.nim_nip}
+                    onChange={(e) => setTargetUser({ ...targetUser, nim_nip: e.target.value })}
+                    className="form-control"
+                    required
+                    disabled={modalType === 'edit'}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Username:</label>
+                  <input 
+                    type="text" 
+                    value={targetUser.username}
+                    onChange={(e) => setTargetUser({ ...targetUser, username: e.target.value })}
+                    className="form-control"
+                    placeholder="Biarkan kosong untuk disamakan dengan NIM/NIP"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Nama Lengkap:</label>
+                  <input 
+                    type="text" 
+                    value={targetUser.nama}
+                    onChange={(e) => setTargetUser({ ...targetUser, nama: e.target.value })}
+                    className="form-control"
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Password:</label>
+                  <input 
+                    type="text" 
+                    value={targetUser.password}
+                    onChange={(e) => setTargetUser({ ...targetUser, password: e.target.value })}
+                    className="form-control"
+                    placeholder={modalType === 'edit' ? 'Ketik untuk mengubah password' : ''}
+                    required={modalType === 'add'}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Role Pengguna:</label>
+                  <select 
+                    value={targetUser.role}
+                    onChange={(e) => setTargetUser({ ...targetUser, role: e.target.value })}
+                    className="form-control"
+                    required
+                  >
+                    <option value="mahasiswa">Mahasiswa</option>
+                    <option value="dosen">Dosen</option>
+                    <option value="admin_prodi">Admin Prodi</option>
+                    <option value="superadmin">Superadmin</option>
+                    <option value="pengawas">Pengawas</option>
+                    <option value="pusbangkatar">Pusbangkatar</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Program Studi:</label>
+                  <select 
+                    value={targetUser.prodi_id}
+                    onChange={(e) => setTargetUser({ ...targetUser, prodi_id: e.target.value })}
+                    className="form-control"
+                    disabled={currentRole === 'admin_prodi'}
+                  >
+                    <option value="">-- Tidak Ada Prodi / Non-Akademik --</option>
+                    <option value="ffe7ed2a-97b6-458b-9fc7-4d9b62e04efb">D-III Nautika</option>
+                    <option value="39ae54ce-9e86-4b99-943e-53437403e32d">D-III Permesinan Kapal</option>
+                    <option value="2df63354-d49e-4f31-88aa-513509e22954">D-III Manajemen Transportasi Perairan Daratan (MTPD)</option>
+                  </select>
+                </div>
+
+                {targetUser.role === 'mahasiswa' && (
+                  <div className="form-group">
+                    <label className="form-label">Pilih Kelas:</label>
+                    <select 
+                      value={targetUser.kelas_id}
+                      onChange={(e) => setTargetUser({ ...targetUser, kelas_id: e.target.value })}
+                      className="form-control"
+                      required
+                    >
+                      <option value="">-- Pilih Kelas --</option>
+                      {filteredKelasList
+                        .filter(c => c.prodi_id === targetUser.prodi_id)
+                        .map(c => (
+                          <option key={c.id} value={c.id}>{c.nama}</option>
+                        ))}
+                    </select>
+                  </div>
+                )}
+
+                <div className="form-group">
+                  <label className="form-label">Email (Opsional):</label>
+                  <input 
+                    type="email" 
+                    value={targetUser.email}
+                    onChange={(e) => setTargetUser({ ...targetUser, email: e.target.value })}
+                    className="form-control"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">No. Telepon / HP (Opsional):</label>
+                  <input 
+                    type="text" 
+                    value={targetUser.no_hp}
+                    onChange={(e) => setTargetUser({ ...targetUser, no_hp: e.target.value })}
+                    className="form-control"
+                  />
+                </div>
+
+                <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+                  <input 
+                    type="checkbox" 
+                    id="userIsActive"
+                    checked={targetUser.is_active}
+                    onChange={(e) => setTargetUser({ ...targetUser, is_active: e.target.checked })}
+                    style={{ width: 'auto', margin: 0 }}
+                  />
+                  <label htmlFor="userIsActive" className="form-label" style={{ margin: 0, cursor: 'pointer' }}>Status User Aktif</label>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowUserModal(false)}>Batal</button>
+                <button type="submit" className="btn btn-primary btn-sm">Simpan</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* KELAS MODAL */}
+      {showKelasModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h3>{modalType === 'add' ? 'Tambah Kelas Baru' : 'Edit Kelas'}</h3>
+              <button onClick={() => setShowKelasModal(false)} className="btn-close">✕</button>
+            </div>
+            <form onSubmit={handleSaveKelasSubmit}>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label className="form-label">Nama Kelas:</label>
+                  <input 
+                    type="text" 
+                    value={targetKelas.nama}
+                    onChange={(e) => setTargetKelas({ ...targetKelas, nama: e.target.value })}
+                    className="form-control"
+                    placeholder="Contoh: Nautika A atau PK-1A"
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Program Studi:</label>
+                  <select 
+                    value={targetKelas.prodi_id}
+                    onChange={(e) => setTargetKelas({ ...targetKelas, prodi_id: e.target.value })}
+                    className="form-control"
+                    required
+                    disabled={currentRole === 'admin_prodi'}
+                  >
+                    <option value="ffe7ed2a-97b6-458b-9fc7-4d9b62e04efb">D-III Nautika</option>
+                    <option value="39ae54ce-9e86-4b99-943e-53437403e32d">D-III Permesinan Kapal</option>
+                    <option value="2df63354-d49e-4f31-88aa-513509e22954">D-III Manajemen Transportasi Perairan Daratan (MTPD)</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="form-group">
+                    <label className="form-label">Angkatan:</label>
+                    <input 
+                      type="number" 
+                      value={targetKelas.angkatan}
+                      onChange={(e) => setTargetKelas({ ...targetKelas, angkatan: parseInt(e.target.value) || 36 })}
+                      className="form-control"
+                      min={10} max={60}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Semester:</label>
+                    <input 
+                      type="number" 
+                      value={targetKelas.semester}
+                      onChange={(e) => setTargetKelas({ ...targetKelas, semester: parseInt(e.target.value) || 1 })}
+                      className="form-control"
+                      min={1} max={6}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowKelasModal(false)}>Batal</button>
+                <button type="submit" className="btn btn-primary btn-sm">Simpan</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* JADWAL MODAL */}
+      {showJadwalModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h3>{modalType === 'add' ? 'Tambah Jadwal Baru' : 'Edit Jadwal Kuliah'}</h3>
+              <button onClick={() => setShowJadwalModal(false)} className="btn-close">✕</button>
+            </div>
+            <form onSubmit={handleSaveJadwalSubmit}>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label className="form-label">Pilih Kelas:</label>
+                  <select 
+                    value={targetJadwal.kelas_id}
+                    onChange={(e) => setTargetJadwal({ ...targetJadwal, kelas_id: e.target.value })}
+                    className="form-control"
+                    required
+                  >
+                    <option value="">-- Pilih Kelas --</option>
+                    {filteredKelasList.map(c => (
+                      <option key={c.id} value={c.id}>{c.nama} ({PRODI_MAP_FROM_DB[c.prodi_id]?.substring(6)})</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Pilih Mata Kuliah:</label>
+                  <select 
+                    value={targetJadwal.mata_kuliah_id}
+                    onChange={(e) => setTargetJadwal({ ...targetJadwal, mata_kuliah_id: e.target.value })}
+                    className="form-control"
+                    required
+                  >
+                    <option value="">-- Pilih Mata Kuliah --</option>
+                    {filteredMatakuliahList.map(m => (
+                      <option key={m.id || m.kode} value={m.id || m.kode}>{m.kode} - {m.nama} ({m.sks} SKS)</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Pilih Dosen Pengampu:</label>
+                  <select 
+                    value={targetJadwal.dosen_id}
+                    onChange={(e) => setTargetJadwal({ ...targetJadwal, dosen_id: e.target.value })}
+                    className="form-control"
+                    required
+                  >
+                    <option value="">-- Pilih Dosen --</option>
+                    {rawUsersList
+                      .filter(u => u.role === 'dosen')
+                      .map(d => (
+                        <option key={d.id} value={d.id}>{d.nama}</option>
+                      ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Hari Kuliah:</label>
+                  <select 
+                    value={targetJadwal.hari}
+                    onChange={(e) => setTargetJadwal({ ...targetJadwal, hari: e.target.value })}
+                    className="form-control"
+                    required
+                  >
+                    <option value="Senin">Senin</option>
+                    <option value="Selasa">Selasa</option>
+                    <option value="Rabu">Rabu</option>
+                    <option value="Kamis">Kamis</option>
+                    <option value="Jumat">Jumat</option>
+                    <option value="Sabtu">Sabtu</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="form-group">
+                    <label className="form-label">Jam Mulai:</label>
+                    <input 
+                      type="time" 
+                      value={targetJadwal.jam_mulai}
+                      onChange={(e) => setTargetJadwal({ ...targetJadwal, jam_mulai: e.target.value })}
+                      className="form-control"
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Jam Selesai:</label>
+                    <input 
+                      type="time" 
+                      value={targetJadwal.jam_selesai}
+                      onChange={(e) => setTargetJadwal({ ...targetJadwal, jam_selesai: e.target.value })}
+                      className="form-control"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Ruangan:</label>
+                  <input 
+                    type="text" 
+                    value={targetJadwal.ruangan}
+                    onChange={(e) => setTargetJadwal({ ...targetJadwal, ruangan: e.target.value })}
+                    className="form-control"
+                    placeholder="Contoh: Ruang 103 atau Lab Navigasi"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowJadwalModal(false)}>Batal</button>
                 <button type="submit" className="btn btn-primary btn-sm">Simpan</button>
               </div>
             </form>

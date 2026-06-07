@@ -41,6 +41,10 @@ export default function App() {
   const [presensiList, setPresensiList] = useState(INITIAL_PRESENSI);
   const [settings, setSettings] = useState(SETTINGS);
 
+  // Unified database tables states
+  const [rawUsersList, setRawUsersList] = useState([]);
+  const [jadwalPembelajaranList, setJadwalPembelajaranList] = useState([]);
+
   // 2. CONTEXT STATE (User Login Simulasi)
   const [currentRole, setCurrentRole] = useState('taruna'); // 'taruna', 'dosen', 'admin', 'admin_prodi'
   const [activeTarunaNim, setActiveTarunaNim] = useState('23.3.0123'); // Default Aditya Wiratama
@@ -81,31 +85,51 @@ export default function App() {
     }
   };
 
-  // Fetch all data from Supabase on mount (tidak ada yang disimpan di lokal)
-  const fetchAllDataFromSupabase = async () => {
+  // Fetch Kelas from Supabase helper
+  const fetchKelasFromSupabase = async () => {
     try {
-      // 1. Fetch Mata Kuliah
-      await fetchMataKuliahFromSupabase();
-
-      // 2. Fetch Kelas
       const { data: kelasData } = await supabase.from('kelas').select('*');
-
-      // 3. Fetch UKT Payments from pembayaran_ukt
-      let uktRecords = [];
-      try {
-        const { data } = await supabase.from('pembayaran_ukt').select('*');
-        if (data) uktRecords = data;
-      } catch (e) {
-        console.warn("Table pembayaran_ukt not found. Run schema.sql in Supabase to sync UKT.");
+      if (kelasData) {
+        setKelasList(kelasData);
       }
+    } catch (err) {
+      console.error("Gagal melakukan fetch kelas:", err);
+    }
+  };
 
-      // 4. Fetch Users (students and lecturers)
+  // Fetch Jadwal Pembelajaran from Supabase helper
+  const fetchJadwalFromSupabase = async () => {
+    try {
+      const { data: jadwalData } = await supabase.from('jadwal_pembelajaran').select('*');
+      if (jadwalData) {
+        setJadwalPembelajaranList(jadwalData);
+      }
+    } catch (err) {
+      console.error("Gagal melakukan fetch jadwal pembelajaran:", err);
+    }
+  };
+
+  // Fetch Users from Supabase helper (unifying CAT, LMS, SIAKAD)
+  const fetchUsersFromSupabase = async () => {
+    try {
       const { data: usersData } = await supabase.from('users').select('*');
       if (usersData) {
+        setRawUsersList(usersData);
+
+        const { data: kelasData } = await supabase.from('kelas').select('*');
+        
+        let uktRecords = [];
+        try {
+          const { data } = await supabase.from('pembayaran_ukt').select('*');
+          if (data) uktRecords = data;
+        } catch (e) {}
+
+        // Map students
         const students = usersData.filter(u => u.role === 'mahasiswa');
         const mappedStudents = students.map(u => {
           const ukt = uktRecords.find(r => r.mahasiswa_id === u.id) || {};
           const kl = kelasData?.find(c => c.id === u.kelas_id) || {};
+          const studentDosen = usersData.find(d => d.role === 'dosen' && d.id === u.dosen_utama_id);
           return {
             id: u.id,
             nim: u.nim_nip,
@@ -113,24 +137,26 @@ export default function App() {
             prodi: PRODI_MAP_FROM_DB[u.prodi_id] || 'D-III Nautika',
             semester: kl.semester || 4,
             kelas: kl.nama || 'Nautika A',
-            email: u.email || `${u.nim_nip}@poltektrans.ac.id`,
+            email: u.email || '',
             ipk: 3.5,
             ips_prev: u.nilai_semapta || 3.5,
             status_ukt: ukt.status_ukt || 'Belum Lunas',
             keterangan_pembayaran: ukt.keterangan || '',
             angkatan: u.created_at ? new Date(u.created_at).getFullYear().toString() : '2026',
             poin_ketarunaan: u.nilai_kondite || 100,
-            riwayat_poin: []
+            riwayat_poin: [],
+            dosen_wali_nidn: studentDosen ? studentDosen.nim_nip : ''
           };
         });
         setTarunaList(mappedStudents);
 
+        // Map lecturers
         const lecturers = usersData.filter(u => u.role === 'dosen');
         const mappedLecturers = lecturers.map(u => ({
           id: u.id,
           nidn: u.nim_nip,
           nama: u.nama,
-          email: u.email || `${u.nim_nip}@poltektrans.ac.id`,
+          email: u.email || '',
           prodi: PRODI_MAP_FROM_DB[u.prodi_id] || 'D-III Nautika',
           telepon: u.no_hp || '-',
           foto: u.avatar_url || null,
@@ -138,13 +164,31 @@ export default function App() {
         }));
         setDosenList(mappedLecturers);
       }
+    } catch (err) {
+      console.error("Gagal melakukan fetch users:", err);
+    }
+  };
 
-      // 5. Fetch KRS
+  // Fetch all data from Supabase on mount (tidak ada yang disimpan di lokal)
+  const fetchAllDataFromSupabase = async () => {
+    try {
+      await fetchMataKuliahFromSupabase();
+      await fetchKelasFromSupabase();
+      await fetchJadwalFromSupabase();
+      await fetchUsersFromSupabase();
+
+      // 5. Fetch KRS & Inject Auto KRS for Paid Students
       try {
         const { data: krsData } = await supabase.from('krs').select('*');
-        if (krsData && krsData.length > 0 && usersData) {
-          const mappedKrs = krsData.map(k => {
-            const student = usersData.find(u => u.id === k.mahasiswa_id);
+        const { data: uData } = await supabase.from('users').select('*');
+        const { data: uktData } = await supabase.from('pembayaran_ukt').select('*');
+        const { data: jData } = await supabase.from('jadwal_pembelajaran').select('*');
+        const { data: kelasData } = await supabase.from('kelas').select('*');
+
+        let mappedKrs = [];
+        if (krsData) {
+          mappedKrs = krsData.map(k => {
+            const student = uData?.find(u => u.id === k.mahasiswa_id);
             return {
               id: k.id,
               nim: student ? student.nim_nip : '',
@@ -155,18 +199,101 @@ export default function App() {
               catatan_dosen: k.catatan_dosen || ''
             };
           });
-          setKrsList(mappedKrs);
+        }
+
+        if (uData) {
+          const students = uData.filter(u => u.role === 'mahasiswa');
+          students.forEach(student => {
+            const ukt = uktData?.find(r => r.mahasiswa_id === student.id) || {};
+            const isPaid = ukt.status_ukt === 'Lunas';
+            if (isPaid) {
+              const kl = kelasData?.find(c => c.id === student.kelas_id) || {};
+              const matchingSchedules = jData?.filter(j => j.kelas_id === student.kelas_id) || [];
+              const scheduleIds = matchingSchedules.map(j => j.id);
+
+              const existingKrsIdx = mappedKrs.findIndex(k => k.nim === student.nim_nip);
+              if (existingKrsIdx > -1) {
+                mappedKrs[existingKrsIdx] = {
+                  ...mappedKrs[existingKrsIdx],
+                  kelas_ids: scheduleIds,
+                  status: 'Disetujui Ka. Prodi'
+                };
+              } else {
+                mappedKrs.push({
+                  id: `KRS-${student.nim_nip}-auto`,
+                  nim: student.nim_nip,
+                  tahun_ajaran: settings.tahun_ajaran_aktif || '2026/2027 Ganjil',
+                  semester: kl.semester || 4,
+                  kelas_ids: scheduleIds,
+                  status: 'Disetujui Ka. Prodi',
+                  catatan_dosen: ''
+                });
+              }
+            }
+          });
+        }
+        setKrsList(mappedKrs);
+
+        // 5.5. Fetch Presensi from Supabase
+        if (uData && jData) {
+          const { data: presensiData } = await supabase.from('presensi').select('status, pertemuan_id, mahasiswa_id');
+          const { data: pertemuanData } = await supabase.from('pertemuan').select('id, kelas_kuliah_id');
+          const { data: kelasKuliahData } = await supabase.from('kelas_kuliah').select('id, kelas_id, mata_kuliah_id');
+
+          if (presensiData && pertemuanData && kelasKuliahData) {
+            const aggregates = {};
+            presensiData.forEach(p => {
+              const student = uData.find(u => u.id === p.mahasiswa_id);
+              if (!student) return;
+
+              const pert = pertemuanData.find(pt => pt.id === p.pertemuan_id);
+              if (!pert) return;
+
+              const kk = kelasKuliahData.find(k => k.id === pert.kelas_kuliah_id);
+              if (!kk) return;
+
+              const schedule = jData.find(s => s.kelas_id === kk.kelas_id && s.mata_kuliah_id === kk.mata_kuliah_id);
+              const scheduleId = schedule ? schedule.id : kk.id;
+
+              const key = `${student.nim_nip}_${scheduleId}`;
+              if (!aggregates[key]) {
+                aggregates[key] = {
+                  nim: student.nim_nip,
+                  kelas_id: scheduleId,
+                  total_pertemuan: 0,
+                  hadir: 0,
+                  sakit: 0,
+                  izin: 0,
+                  alfa: 0
+                };
+              }
+
+              aggregates[key].total_pertemuan += 1;
+              const statusLower = p.status?.toLowerCase();
+              if (statusLower === 'hadir') {
+                aggregates[key].hadir += 1;
+              } else if (statusLower === 'sakit') {
+                aggregates[key].sakit += 1;
+              } else if (statusLower === 'izin') {
+                aggregates[key].izin += 1;
+              } else {
+                aggregates[key].alfa += 1;
+              }
+            });
+            setPresensiList(Object.values(aggregates));
+          }
         }
       } catch (e) {
-        console.warn("Table krs not found. Run schema.sql in Supabase to sync KRS.");
+        console.warn("Could not sync KRS and attendance from Supabase:", e.message);
       }
 
       // 6. Fetch Grades from hasil_ujian
       try {
         const { data: examData } = await supabase.from('hasil_ujian').select('*');
-        if (examData && examData.length > 0 && usersData) {
+        if (examData && examData.length > 0) {
+          const { data: uData } = await supabase.from('users').select('*');
           const mappedGrades = examData.map(g => {
-            const student = usersData.find(u => u.id === g.mahasiswa_id);
+            const student = uData?.find(u => u.id === g.mahasiswa_id);
             return {
               id: g.id,
               nim: student ? student.nim_nip : '',
@@ -206,6 +333,23 @@ export default function App() {
   const currentUser = currentRole === 'taruna' ? currentTarunaObj : 
                       currentRole === 'dosen' ? currentDosenObj : 
                       currentRole === 'admin_prodi' ? { nama: 'Admin Prodi', prodi: adminProdiDept } : null;
+
+  // Compute class sessions list mapped from jadwal_pembelajaran table to match mock INITIAL_KELAS format for TarunaPortal and DosenPortal
+  const classSessionsList = React.useMemo(() => {
+    return jadwalPembelajaranList.map(j => {
+      const mk = matakuliahList.find(m => m.id === j.mata_kuliah_id || m.kode === j.mata_kuliah_id);
+      const dosen = rawUsersList.find(u => u.id === j.dosen_id || u.nim_nip === j.dosen_id);
+      return {
+        id: j.id,
+        matakuliah_kode: mk ? mk.kode : (j.mata_kuliah_id || ''),
+        dosen_nidn: dosen ? dosen.nim_nip : (j.dosen_id || ''),
+        hari: j.hari,
+        jam: `${j.jam_mulai?.substring(0, 5) || '08:00'} - ${j.jam_selesai?.substring(0, 5) || '10:00'}`,
+        ruang: j.ruangan || 'R. Kelas',
+        kuota: 30
+      };
+    });
+  }, [jadwalPembelajaranList, matakuliahList, rawUsersList]);
 
   // Grade point mapping helper
   const getBobot = (letter) => {
@@ -587,42 +731,227 @@ export default function App() {
   };
 
   // Admin CRUD Operations for Taruna
+  // Admin CRUD Operations for Taruna (Compat wrappers)
   const handleAddTaruna = (taruna) => {
-    setTarunaList(prev => [...prev, {
-      ...taruna,
-      poin_ketarunaan: 100,
-      riwayat_poin: []
-    }]);
-    alert("Mahasiswa berhasil ditambahkan!");
+    handleAddUser({ ...taruna, role: 'mahasiswa' });
   };
 
   const handleEditTaruna = (taruna) => {
-    setTarunaList(prev => prev.map(t => t.nim === taruna.nim ? taruna : t));
-    alert("Data Mahasiswa berhasil diperbarui!");
+    handleEditUser({ ...taruna, role: 'mahasiswa' });
   };
 
   const handleDeleteTaruna = (nim) => {
-    setTarunaList(prev => prev.filter(t => t.nim !== nim));
-    setKrsList(prev => prev.filter(k => k.nim !== nim));
-    setNilaiList(prev => prev.filter(n => n.nim !== nim));
-    setPresensiList(prev => prev.filter(p => p.nim !== nim));
-    alert("Data Mahasiswa telah dihapus!");
+    const student = tarunaList.find(t => t.nim === nim);
+    if (student) {
+      handleDeleteUser(student.id);
+    }
   };
 
-  // Admin CRUD for Dosen
+  // Admin CRUD for Dosen (Compat wrappers)
   const handleAddDosen = (dosen) => {
-    setDosenList(prev => [...prev, dosen]);
-    alert("Dosen berhasil ditambahkan!");
+    handleAddUser({ ...dosen, nim_nip: dosen.nidn, role: 'dosen' });
   };
 
   const handleEditDosen = (dosen) => {
-    setDosenList(prev => prev.map(d => d.nidn === dosen.nidn ? dosen : d));
-    alert("Data Dosen berhasil diperbarui!");
+    handleEditUser({ ...dosen, nim_nip: dosen.nidn, role: 'dosen' });
   };
 
   const handleDeleteDosen = (nidn) => {
-    setDosenList(prev => prev.filter(d => d.nidn !== nidn));
-    alert("Data Dosen telah dihapus!");
+    const d = dosenList.find(x => x.nidn === nidn);
+    if (d) {
+      handleDeleteUser(d.id);
+    }
+  };
+
+  // === Unified User CRUD (Supabase Sync) ===
+  const handleAddUser = async (user) => {
+    try {
+      const { error } = await supabase.from('users').insert([{
+        nim_nip: user.nim_nip,
+        username: user.username || user.nim_nip,
+        nama: user.nama,
+        email: user.email || null,
+        password: user.password || user.nim_nip,
+        role: user.role,
+        prodi_id: user.prodi_id || null,
+        kelas_id: user.kelas_id || null,
+        is_active: user.is_active !== undefined ? user.is_active : true,
+        status: user.is_active === false ? 'inactive' : 'active'
+      }]);
+      if (error) throw error;
+      alert("User berhasil ditambahkan!");
+      await fetchUsersFromSupabase();
+    } catch (err) {
+      console.error(err);
+      alert("Gagal menambahkan user: " + err.message);
+    }
+  };
+
+  const handleEditUser = async (user) => {
+    try {
+      const { error } = await supabase.from('users').update({
+        nim_nip: user.nim_nip,
+        username: user.username || user.nim_nip,
+        nama: user.nama,
+        email: user.email || null,
+        password: user.password,
+        role: user.role,
+        prodi_id: user.prodi_id || null,
+        kelas_id: user.kelas_id || null,
+        is_active: user.is_active,
+        status: user.is_active === false ? 'inactive' : 'active'
+      }).eq('id', user.id);
+      if (error) throw error;
+      alert("User berhasil diperbarui!");
+      await fetchUsersFromSupabase();
+    } catch (err) {
+      console.error(err);
+      alert("Gagal memperbarui user: " + err.message);
+    }
+  };
+
+  const handleDeleteUser = async (id) => {
+    try {
+      const { error } = await supabase.from('users').delete().eq('id', id);
+      if (error) throw error;
+      alert("User berhasil dihapus!");
+      await fetchUsersFromSupabase();
+    } catch (err) {
+      console.error(err);
+      alert("Gagal menghapus user: " + err.message);
+    }
+  };
+
+  // === Kelas CRUD (Supabase Sync) ===
+  const handleAddKelas = async (kelasObj) => {
+    try {
+      const { error } = await supabase.from('kelas').insert([{
+        nama: kelasObj.nama,
+        prodi_id: kelasObj.prodi_id,
+        angkatan: parseInt(kelasObj.angkatan) || 36,
+        semester: parseInt(kelasObj.semester) || 1
+      }]);
+      if (error) throw error;
+      alert("Kelas berhasil ditambahkan!");
+      await fetchKelasFromSupabase();
+      await fetchUsersFromSupabase(); // Class changes could affect students' classes
+    } catch (err) {
+      console.error(err);
+      alert("Gagal menambahkan kelas: " + err.message);
+    }
+  };
+
+  const handleEditKelas = async (kelasObj) => {
+    try {
+      const { error } = await supabase.from('kelas').update({
+        nama: kelasObj.nama,
+        prodi_id: kelasObj.prodi_id,
+        angkatan: parseInt(kelasObj.angkatan),
+        semester: parseInt(kelasObj.semester)
+      }).eq('id', kelasObj.id);
+      if (error) throw error;
+      alert("Kelas berhasil diperbarui!");
+      await fetchKelasFromSupabase();
+      await fetchUsersFromSupabase();
+    } catch (err) {
+      console.error(err);
+      alert("Gagal memperbarui kelas: " + err.message);
+    }
+  };
+
+  const handleDeleteKelas = async (id) => {
+    try {
+      const { error } = await supabase.from('kelas').delete().eq('id', id);
+      if (error) throw error;
+      alert("Kelas berhasil dihapus!");
+      await fetchKelasFromSupabase();
+      await fetchUsersFromSupabase();
+    } catch (err) {
+      console.error(err);
+      alert("Gagal menghapus kelas: " + err.message);
+    }
+  };
+
+  // === Jadwal Pembelajaran CRUD (Supabase Sync) ===
+  const handleAddJadwal = async (jadwalObj) => {
+    try {
+      const { error } = await supabase.from('jadwal_pembelajaran').insert([{
+        kelas_id: jadwalObj.kelas_id,
+        mata_kuliah_id: jadwalObj.mata_kuliah_id,
+        dosen_id: jadwalObj.dosen_id,
+        hari: jadwalObj.hari,
+        jam_mulai: jadwalObj.jam_mulai,
+        jam_selesai: jadwalObj.jam_selesai,
+        ruangan: jadwalObj.ruangan
+      }]);
+      if (error) throw error;
+      alert("Jadwal pembelajaran berhasil ditambahkan!");
+      await fetchJadwalFromSupabase();
+    } catch (err) {
+      console.error(err);
+      alert("Gagal menambahkan jadwal: " + err.message);
+    }
+  };
+
+  const handleEditJadwal = async (jadwalObj) => {
+    try {
+      const { error } = await supabase.from('jadwal_pembelajaran').update({
+        kelas_id: jadwalObj.kelas_id,
+        mata_kuliah_id: jadwalObj.mata_kuliah_id,
+        dosen_id: jadwalObj.dosen_id,
+        hari: jadwalObj.hari,
+        jam_mulai: jadwalObj.jam_mulai,
+        jam_selesai: jadwalObj.jam_selesai,
+        ruangan: jadwalObj.ruangan
+      }).eq('id', jadwalObj.id);
+      if (error) throw error;
+      alert("Jadwal pembelajaran berhasil diperbarui!");
+      await fetchJadwalFromSupabase();
+    } catch (err) {
+      console.error(err);
+      alert("Gagal memperbarui jadwal: " + err.message);
+    }
+  };
+
+  const handleDeleteJadwal = async (id) => {
+    try {
+      const { error } = await supabase.from('jadwal_pembelajaran').delete().eq('id', id);
+      if (error) throw error;
+      alert("Jadwal pembelajaran berhasil dihapus!");
+      await fetchJadwalFromSupabase();
+    } catch (err) {
+      console.error(err);
+      alert("Gagal menghapus jadwal: " + err.message);
+    }
+  };
+
+  // === Dosen Pembimbing Akademik / Wali Assignment (Supabase Sync) ===
+  const handleAssignBimbingan = async (studentId, dosenId) => {
+    try {
+      const { error } = await supabase.from('users').update({
+        dosen_utama_id: dosenId
+      }).eq('id', studentId);
+      if (error) throw error;
+      alert("Mahasiswa bimbingan berhasil ditambahkan!");
+      await fetchUsersFromSupabase();
+    } catch (err) {
+      console.error(err);
+      alert("Gagal menugaskan mahasiswa bimbingan: " + err.message);
+    }
+  };
+
+  const handleRemoveBimbingan = async (studentId) => {
+    try {
+      const { error } = await supabase.from('users').update({
+        dosen_utama_id: null
+      }).eq('id', studentId);
+      if (error) throw error;
+      alert("Mahasiswa bimbingan berhasil dilepas!");
+      await fetchUsersFromSupabase();
+    } catch (err) {
+      console.error(err);
+      alert("Gagal melepas mahasiswa bimbingan: " + err.message);
+    }
   };
 
   // Admin CRUD for Matakuliah
@@ -793,7 +1122,7 @@ export default function App() {
             currentUser={currentUser}
             activeMenu={activeMenu}
             matakuliahList={matakuliahList}
-            kelasList={kelasList}
+            kelasList={classSessionsList}
             krsList={krsList}
             nilaiList={nilaiList}
             presensiList={presensiList}
@@ -810,7 +1139,7 @@ export default function App() {
             activeMenu={activeMenu}
             tarunaList={tarunaList}
             matakuliahList={matakuliahList}
-            kelasList={kelasList}
+            kelasList={classSessionsList}
             krsList={krsList}
             nilaiList={nilaiList}
             presensiList={presensiList}
@@ -844,6 +1173,20 @@ export default function App() {
             onApproveKrs={handleApproveKrs}
             currentRole={currentRole}
             adminProdiDept={adminProdiDept}
+            
+            rawUsersList={rawUsersList}
+            jadwalPembelajaranList={jadwalPembelajaranList}
+            onAddUser={handleAddUser}
+            onEditUser={handleEditUser}
+            onDeleteUser={handleDeleteUser}
+            onAddKelas={handleAddKelas}
+            onEditKelas={handleEditKelas}
+            onDeleteKelas={handleDeleteKelas}
+            onAddJadwal={handleAddJadwal}
+            onEditJadwal={handleEditJadwal}
+            onDeleteJadwal={handleDeleteJadwal}
+            onAssignBimbingan={handleAssignBimbingan}
+            onRemoveBimbingan={handleRemoveBimbingan}
           />
         )}
 
