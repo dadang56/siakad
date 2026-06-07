@@ -1944,7 +1944,7 @@ export default function AdminPortal({
               
               {/* Search and assign student form */}
               {currentRole !== 'admin' && (
-                <div className="glass-card" style={{ marginBottom: '20px', padding: '16px', background: 'rgba(255, 255, 255, 0.02)' }}>
+                <div className="glass-card" style={{ marginBottom: '20px', padding: '16px', background: 'rgba(255, 255, 255, 0.02)', overflow: 'visible' }}>
                   <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Assign Mahasiswa Bimbingan Baru</h4>
                   
                   <div style={{ display: 'flex', gap: '12px' }}>
