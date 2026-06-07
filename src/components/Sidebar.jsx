@@ -41,6 +41,7 @@ export default function Sidebar({
           { id: 'presensi', label: 'Monitoring presensi mahasiswa', icon: CheckSquare }
         ];
       case 'admin':
+      case 'admin_prodi':
         return [
           { id: 'dashboard', label: 'Dashboard Admin', icon: LayoutDashboard },
           { id: 'taruna', label: 'Kelola Mahasiswa', icon: Users },
@@ -86,7 +87,8 @@ export default function Sidebar({
           <span className="profile-role">
             {currentRole === 'taruna' ? `Mahasiswa - ${currentUser?.nim}` : 
              currentRole === 'dosen' ? 'Dosen Wali' : 
-             currentRole === 'keuangan' ? 'Admin Keuangan' : 'Admin BAK'}
+             currentRole === 'keuangan' ? 'Admin Keuangan' : 
+             currentRole === 'admin_prodi' ? `Admin Prodi - ${currentUser?.prodi || ''}` : 'Admin BAK'}
           </span>
         </div>
       </div>
@@ -96,7 +98,7 @@ export default function Sidebar({
         <ul className="sidebar-menu">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const themeClass = currentRole === 'dosen' ? 'dosen-theme' : currentRole === 'admin' ? 'admin-theme' : currentRole === 'keuangan' ? 'keuangan-theme' : '';
+            const themeClass = currentRole === 'dosen' ? 'dosen-theme' : (currentRole === 'admin' || currentRole === 'admin_prodi') ? 'admin-theme' : currentRole === 'keuangan' ? 'keuangan-theme' : '';
             return (
               <li key={item.id}>
                 <button

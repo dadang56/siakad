@@ -42,9 +42,10 @@ export default function App() {
   const [settings, setSettings] = useState(SETTINGS);
 
   // 2. CONTEXT STATE (User Login Simulasi)
-  const [currentRole, setCurrentRole] = useState('taruna'); // 'taruna', 'dosen', 'admin'
+  const [currentRole, setCurrentRole] = useState('taruna'); // 'taruna', 'dosen', 'admin', 'admin_prodi'
   const [activeTarunaNim, setActiveTarunaNim] = useState('23.3.0123'); // Default Aditya Wiratama
   const [activeDosenNidn, setActiveDosenNidn] = useState('04.1205.8801'); // Default Capt. Heri
+  const [adminProdiDept, setAdminProdiDept] = useState('D-III Nautika'); // Active department for Admin Prodi
   
   const [activeMenu, setActiveMenu] = useState('krs');
   const [showIdentitySelector, setShowIdentitySelector] = useState(false);
@@ -58,10 +59,9 @@ export default function App() {
     }
   }, [currentRole]);
 
-  // Fetch all data from Supabase on mount (tidak ada yang disimpan di lokal)
-  const fetchAllDataFromSupabase = async () => {
+  // Fetch Mata Kuliah from Supabase helper
+  const fetchMataKuliahFromSupabase = async () => {
     try {
-      // 1. Fetch Mata Kuliah
       const { data: mkData } = await supabase.from('mata_kuliah').select('*');
       if (mkData) {
         const mappedMk = mkData.map(item => ({
@@ -76,6 +76,16 @@ export default function App() {
         }));
         setMatakuliahList(mappedMk);
       }
+    } catch (err) {
+      console.error("Gagal melakukan fetch mata kuliah:", err);
+    }
+  };
+
+  // Fetch all data from Supabase on mount (tidak ada yang disimpan di lokal)
+  const fetchAllDataFromSupabase = async () => {
+    try {
+      // 1. Fetch Mata Kuliah
+      await fetchMataKuliahFromSupabase();
 
       // 2. Fetch Kelas
       const { data: kelasData } = await supabase.from('kelas').select('*');
@@ -194,7 +204,8 @@ export default function App() {
   const currentDosenObj = dosenList.find(d => d.nidn === activeDosenNidn) || dosenList[0];
   
   const currentUser = currentRole === 'taruna' ? currentTarunaObj : 
-                      currentRole === 'dosen' ? currentDosenObj : null;
+                      currentRole === 'dosen' ? currentDosenObj : 
+                      currentRole === 'admin_prodi' ? { nama: 'Admin Prodi', prodi: adminProdiDept } : null;
 
   // Grade point mapping helper
   const getBobot = (letter) => {
@@ -744,6 +755,12 @@ export default function App() {
             <ShieldAlert style={{ width: '13px', height: '13px' }} /> Admin (BAK)
           </button>
           <button 
+            className={`btn-switch admin ${currentRole === 'admin_prodi' ? 'active' : ''}`}
+            onClick={() => { setCurrentRole('admin_prodi'); setAdminProdiDept('D-III Nautika'); }}
+          >
+            <ShieldAlert style={{ width: '13px', height: '13px' }} /> Admin Prodi
+          </button>
+          <button 
             className={`btn-switch keuangan ${currentRole === 'keuangan' ? 'active' : ''}`}
             onClick={() => setCurrentRole('keuangan')}
           >
@@ -803,7 +820,7 @@ export default function App() {
           />
         )}
 
-        {currentRole === 'admin' && (
+        {(currentRole === 'admin' || currentRole === 'admin_prodi') && (
           <AdminPortal 
             activeMenu={activeMenu}
             tarunaList={tarunaList}
@@ -825,6 +842,8 @@ export default function App() {
             onAddPoin={handleAddPoin}
             onSyncMk={fetchMataKuliahFromSupabase}
             onApproveKrs={handleApproveKrs}
+            currentRole={currentRole}
+            adminProdiDept={adminProdiDept}
           />
         )}
 
@@ -900,6 +919,57 @@ export default function App() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* Admin Prodi Section */}
+              <div style={{ marginTop: '10px' }}>
+                <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', fontSize: '14px', color: 'var(--accent)' }}>
+                  <ShieldAlert style={{ width: '16px', height: '16px' }} /> Sebagai Admin Prodi
+                </h4>
+                <div className="user-select-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))' }}>
+                  <div 
+                    className="user-select-card"
+                    onClick={() => {
+                      setCurrentRole('admin_prodi');
+                      setAdminProdiDept('D-III Nautika');
+                      setShowIdentitySelector(false);
+                    }}
+                  >
+                    <div className="user-select-avatar" style={{ background: 'var(--accent)' }}>N</div>
+                    <div className="user-select-details">
+                      <span className="user-select-name">Admin Prodi Nautika</span>
+                      <span className="user-select-sub">D-III Nautika</span>
+                    </div>
+                  </div>
+                  <div 
+                    className="user-select-card"
+                    onClick={() => {
+                      setCurrentRole('admin_prodi');
+                      setAdminProdiDept('D-III Permesinan Kapal');
+                      setShowIdentitySelector(false);
+                    }}
+                  >
+                    <div className="user-select-avatar" style={{ background: 'var(--accent)' }}>P</div>
+                    <div className="user-select-details">
+                      <span className="user-select-name">Admin Prodi Permesinan</span>
+                      <span className="user-select-sub">D-III Permesinan Kapal</span>
+                    </div>
+                  </div>
+                  <div 
+                    className="user-select-card"
+                    onClick={() => {
+                      setCurrentRole('admin_prodi');
+                      setAdminProdiDept('D-III Manajemen Transportasi Perairan Daratan (MTPD)');
+                      setShowIdentitySelector(false);
+                    }}
+                  >
+                    <div className="user-select-avatar" style={{ background: 'var(--accent)' }}>M</div>
+                    <div className="user-select-details">
+                      <span className="user-select-name">Admin Prodi MTPD</span>
+                      <span className="user-select-sub">D-III MTPD</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 

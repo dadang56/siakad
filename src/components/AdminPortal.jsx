@@ -21,7 +21,7 @@ export default function AdminPortal({
   tarunaList, 
   dosenList, 
   matakuliahList, 
-  kelasList,
+  kelasList, 
   krsList, 
   settings, 
   onUpdateSettings,
@@ -36,9 +36,31 @@ export default function AdminPortal({
   onDeleteMk,
   onAddPoin,
   onSyncMk,
-  onApproveKrs
+  onApproveKrs,
+  currentRole = 'admin',
+  adminProdiDept = null
 }) {
   
+  // Group or filter data based on prodi for Admin Prodi
+  const filteredTarunaList = currentRole === 'admin_prodi' && adminProdiDept
+    ? tarunaList.filter(t => t.prodi === adminProdiDept)
+    : tarunaList;
+
+  const filteredDosenList = currentRole === 'admin_prodi' && adminProdiDept
+    ? dosenList.filter(d => d.prodi === adminProdiDept)
+    : dosenList;
+
+  const filteredMatakuliahList = currentRole === 'admin_prodi' && adminProdiDept
+    ? matakuliahList.filter(m => m.prodi === adminProdiDept)
+    : matakuliahList;
+
+  const filteredKrsList = currentRole === 'admin_prodi' && adminProdiDept
+    ? krsList.filter(k => {
+        const student = tarunaList.find(t => t.nim === k.nim);
+        return student && student.prodi === adminProdiDept;
+      })
+    : krsList;
+
   // Modals state
   const [showTarunaModal, setShowTarunaModal] = useState(false);
   const [showDosenModal, setShowDosenModal] = useState(false);
@@ -190,8 +212,12 @@ export default function AdminPortal({
         <div className="animate-fade-in">
           {/* Welcome Banner */}
           <div className="glass-card glow-gold" style={{ marginBottom: '32px', background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(245, 158, 11, 0.15) 100%)' }}>
-            <span className="badge badge-warning" style={{ marginBottom: '8px' }}>Portal Administrasi Akademik & Ketarunaan (BAK)</span>
-            <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '4px' }}>Panel Kendali Utama SIAKAD</h2>
+            <span className="badge badge-warning" style={{ marginBottom: '8px' }}>
+              {currentRole === 'admin_prodi' ? `Portal Administrasi Prodi - ${adminProdiDept}` : 'Portal Administrasi Akademik & Kemahasiswaan (BAK)'}
+            </span>
+            <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '4px' }}>
+              {currentRole === 'admin_prodi' ? `Panel Kendali Prodi - ${adminProdiDept}` : 'Panel Kendali Utama SIAKAD'}
+            </h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Politeknik Transportasi SDP Palembang | Semester: {settings.tahun_ajaran_aktif}</p>
           </div>
 
@@ -202,7 +228,7 @@ export default function AdminPortal({
                 <Users />
               </div>
               <div className="metric-content">
-                <span className="metric-value">{tarunaList.length} Mahasiswa</span>
+                <span className="metric-value">{filteredTarunaList.length} Mahasiswa</span>
                 <span className="metric-label">Jumlah Mahasiswa Aktif</span>
               </div>
             </div>
@@ -212,7 +238,7 @@ export default function AdminPortal({
                 <GraduationCap />
               </div>
               <div className="metric-content">
-                <span className="metric-value">{dosenList.length} Dosen</span>
+                <span className="metric-value">{filteredDosenList.length} Dosen</span>
                 <span className="metric-label">Jumlah Dosen Terdaftar</span>
               </div>
             </div>
@@ -222,7 +248,7 @@ export default function AdminPortal({
                 <BookOpen />
               </div>
               <div className="metric-content">
-                <span className="metric-value">{matakuliahList.length} MK</span>
+                <span className="metric-value">{filteredMatakuliahList.length} MK</span>
                 <span className="metric-label">Mata Kuliah Kurikulum</span>
               </div>
             </div>
@@ -233,7 +259,7 @@ export default function AdminPortal({
               </div>
               <div className="metric-content">
                 <span className="metric-value">
-                  {krsList.filter(k => k.status === 'Menunggu Persetujuan').length} KRS
+                  {filteredKrsList.filter(k => k.status === 'Menunggu Persetujuan').length} KRS
                 </span>
                 <span className="metric-label">KRS Menunggu Approval</span>
               </div>
@@ -246,7 +272,7 @@ export default function AdminPortal({
               <div className="card-header-clean">
                 <h3 className="card-title">Antrean Pengajuan KRS Mahasiswa</h3>
               </div>
-              {krsList.filter(k => k.status === 'Menunggu Persetujuan').length > 0 ? (
+              {filteredKrsList.filter(k => k.status === 'Menunggu Persetujuan').length > 0 ? (
                 <div className="table-container">
                   <table className="custom-table">
                     <thead>
@@ -259,9 +285,9 @@ export default function AdminPortal({
                       </tr>
                     </thead>
                     <tbody>
-                      {krsList.filter(k => k.status === 'Menunggu Persetujuan').map((krs) => {
-                        const student = tarunaList.find(t => t.nim === krs.nim);
-                        const walis = dosenList.find(d => d.nidn === student?.dosen_wali_nidn);
+                      {filteredKrsList.filter(k => k.status === 'Menunggu Persetujuan').map((krs) => {
+                        const student = filteredTarunaList.find(t => t.nim === krs.nim);
+                        const walis = filteredDosenList.find(d => d.nidn === student?.dosen_wali_nidn);
                         return (
                           <tr key={krs.id}>
                             <td>{krs.nim}</td>
@@ -321,11 +347,17 @@ export default function AdminPortal({
           <div className="page-header">
             <div>
               <h2 className="page-title">Manajemen Data Mahasiswa</h2>
-              <p className="page-subtitle">Tambah, edit, dan hapus biodata serta status akademik Mahasiswa.</p>
+              <p className="page-subtitle">
+                {currentRole === 'admin' 
+                  ? 'Melihat daftar biodata serta status akademik Mahasiswa (BAK Monitoring).' 
+                  : `Kelola biodata serta status akademik Mahasiswa pada Program Studi ${adminProdiDept}.`}
+              </p>
             </div>
-            <button onClick={handleOpenAddTaruna} className="btn btn-primary btn-sm">
-              <Plus className="menu-icon" /> Tambah Mahasiswa Baru
-            </button>
+            {currentRole !== 'admin' && (
+              <button onClick={handleOpenAddTaruna} className="btn btn-primary btn-sm">
+                <Plus className="menu-icon" /> Tambah Mahasiswa Baru
+              </button>
+            )}
           </div>
 
           <div className="glass-card glow-blue">
@@ -339,12 +371,12 @@ export default function AdminPortal({
                     <th>Angkatan / Smt</th>
                     <th>Dosen Wali</th>
                     <th>Keuangan (UKT)</th>
-                    <th style={{ textAlign: 'center' }}>Aksi</th>
+                    <th style={{ textAlign: 'center' }}>{currentRole === 'admin' ? 'Status' : 'Aksi'}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {tarunaList.map((taruna) => {
-                    const wali = dosenList.find(d => d.nidn === taruna.dosen_wali_nidn);
+                  {filteredTarunaList.map((taruna) => {
+                    const wali = filteredDosenList.find(d => d.nidn === taruna.dosen_wali_nidn);
                     return (
                       <tr key={taruna.nim}>
                         <td><strong>{taruna.nim}</strong></td>
@@ -361,14 +393,18 @@ export default function AdminPortal({
                           </span>
                         </td>
                         <td style={{ textAlign: 'center' }}>
-                          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                            <button onClick={() => handleOpenEditTaruna(taruna)} className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }}>
-                              <Edit style={{ width: '14px', height: '14px' }} />
-                            </button>
-                            <button onClick={() => { if(confirm('Hapus Mahasiswa ini?')) onDeleteTaruna(taruna.nim) }} className="btn btn-danger btn-sm" style={{ padding: '4px 8px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                              <Trash style={{ width: '14px', height: '14px' }} />
-                            </button>
-                          </div>
+                          {currentRole !== 'admin' ? (
+                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                              <button onClick={() => handleOpenEditTaruna(taruna)} className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }}>
+                                <Edit style={{ width: '14px', height: '14px' }} />
+                              </button>
+                              <button onClick={() => { if(confirm('Hapus Mahasiswa ini?')) onDeleteTaruna(taruna.nim) }} className="btn btn-danger btn-sm" style={{ padding: '4px 8px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                                <Trash style={{ width: '14px', height: '14px' }} />
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="badge badge-info" style={{ textTransform: 'none' }}>Terverifikasi</span>
+                          )}
                         </td>
                       </tr>
                     );
@@ -386,11 +422,17 @@ export default function AdminPortal({
           <div className="page-header">
             <div>
               <h2 className="page-title">Manajemen Data Dosen</h2>
-              <p className="page-subtitle">Kelola data dosen pengampu mata kuliah & dosen pembimbing perwalian.</p>
+              <p className="page-subtitle">
+                {currentRole === 'admin' 
+                  ? 'Melihat daftar dosen pengampu mata kuliah & pembimbing perwalian (BAK Monitoring).' 
+                  : `Kelola data dosen pengampu & wali pada Program Studi ${adminProdiDept}.`}
+              </p>
             </div>
-            <button onClick={handleOpenAddDosen} className="btn btn-primary btn-sm">
-              <Plus className="menu-icon" /> Tambah Dosen Baru
-            </button>
+            {currentRole !== 'admin' && (
+              <button onClick={handleOpenAddDosen} className="btn btn-primary btn-sm">
+                <Plus className="menu-icon" /> Tambah Dosen Baru
+              </button>
+            )}
           </div>
 
           <div className="glass-card glow-cyan">
@@ -404,11 +446,11 @@ export default function AdminPortal({
                     <th>Email</th>
                     <th>Kontak / Telp</th>
                     <th>Status</th>
-                    <th style={{ textAlign: 'center' }}>Aksi</th>
+                    <th style={{ textAlign: 'center' }}>{currentRole === 'admin' ? 'Keterangan' : 'Aksi'}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {dosenList.map((dosen) => (
+                  {filteredDosenList.map((dosen) => (
                     <tr key={dosen.nidn}>
                       <td><strong>{dosen.nidn}</strong></td>
                       <td>
@@ -422,14 +464,18 @@ export default function AdminPortal({
                       <td>{dosen.telepon}</td>
                       <td><span className="badge badge-info">{dosen.status}</span></td>
                       <td style={{ textAlign: 'center' }}>
-                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                          <button onClick={() => handleOpenEditDosen(dosen)} className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }}>
-                            <Edit style={{ width: '14px', height: '14px' }} />
-                          </button>
-                          <button onClick={() => { if(confirm('Hapus Dosen ini?')) onDeleteDosen(dosen.nidn) }} className="btn btn-danger btn-sm" style={{ padding: '4px 8px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                            <Trash style={{ width: '14px', height: '14px' }} />
-                          </button>
-                        </div>
+                        {currentRole !== 'admin' ? (
+                          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                            <button onClick={() => handleOpenEditDosen(dosen)} className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }}>
+                              <Edit style={{ width: '14px', height: '14px' }} />
+                            </button>
+                            <button onClick={() => { if(confirm('Hapus Dosen ini?')) onDeleteDosen(dosen.nidn) }} className="btn btn-danger btn-sm" style={{ padding: '4px 8px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                              <Trash style={{ width: '14px', height: '14px' }} />
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="badge badge-primary" style={{ textTransform: 'none' }}>Aktif</span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -446,22 +492,28 @@ export default function AdminPortal({
           <div className="page-header">
             <div>
               <h2 className="page-title">Kurikulum & Mata Kuliah</h2>
-              <p className="page-subtitle">Daftar kurikulum mata kuliah wajib & pilihan per program studi.</p>
+              <p className="page-subtitle">
+                {currentRole === 'admin' 
+                  ? 'Melihat kurikulum mata kuliah wajib & pilihan per program studi (BAK Monitoring).' 
+                  : `Kelola mata kuliah wajib & pilihan pada Program Studi ${adminProdiDept}.`}
+              </p>
             </div>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button 
-                onClick={handleSyncMatkul} 
-                className="btn btn-secondary btn-sm"
-                disabled={isSyncing}
-                style={{ borderColor: 'var(--secondary)' }}
-              >
-                <RefreshCw className={`menu-icon ${isSyncing ? 'spin' : ''}`} style={{ color: 'var(--secondary)' }} />
-                {isSyncing ? 'Menyinkronkan...' : 'Sinkronkan CAT & LMS'}
-              </button>
-              <button onClick={handleOpenAddMk} className="btn btn-primary btn-sm">
-                <Plus className="menu-icon" /> Tambah Matakuliah
-              </button>
-            </div>
+            {currentRole !== 'admin' && (
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button 
+                  onClick={handleSyncMatkul} 
+                  className="btn btn-secondary btn-sm"
+                  disabled={isSyncing}
+                  style={{ borderColor: 'var(--secondary)' }}
+                >
+                  <RefreshCw className={`menu-icon ${isSyncing ? 'spin' : ''}`} style={{ color: 'var(--secondary)' }} />
+                  {isSyncing ? 'Menyinkronkan...' : 'Sinkronkan CAT & LMS'}
+                </button>
+                <button onClick={handleOpenAddMk} className="btn btn-primary btn-sm">
+                  <Plus className="menu-icon" /> Tambah Matakuliah
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="glass-card glow-gold">
@@ -474,27 +526,29 @@ export default function AdminPortal({
                     <th>Program Studi</th>
                     <th style={{ textAlign: 'center' }}>SKS</th>
                     <th style={{ textAlign: 'center' }}>Semester</th>
-                    <th style={{ textAlign: 'center' }}>Aksi</th>
+                    {currentRole !== 'admin' && <th style={{ textAlign: 'center' }}>Aksi</th>}
                   </tr>
                 </thead>
                 <tbody>
-                  {matakuliahList.map((mk) => (
+                  {filteredMatakuliahList.map((mk) => (
                     <tr key={mk.kode}>
                       <td><span className="badge badge-primary">{mk.kode}</span></td>
                       <td><strong>{mk.nama}</strong></td>
                       <td>{mk.prodi}</td>
                       <td style={{ textAlign: 'center' }}>{mk.sks} SKS</td>
                       <td style={{ textAlign: 'center' }}>Smt {mk.semester}</td>
-                      <td style={{ textAlign: 'center' }}>
-                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                          <button onClick={() => handleOpenEditMk(mk)} className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }}>
-                            <Edit style={{ width: '14px', height: '14px' }} />
-                          </button>
-                          <button onClick={() => { if(confirm('Hapus Mata Kuliah ini?')) onDeleteMk(mk.kode) }} className="btn btn-danger btn-sm" style={{ padding: '4px 8px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                            <Trash style={{ width: '14px', height: '14px' }} />
-                          </button>
-                        </div>
-                      </td>
+                      {currentRole !== 'admin' && (
+                        <td style={{ textAlign: 'center' }}>
+                          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                            <button onClick={() => handleOpenEditMk(mk)} className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }}>
+                              <Edit style={{ width: '14px', height: '14px' }} />
+                            </button>
+                            <button onClick={() => { if(confirm('Hapus Mata Kuliah ini?')) onDeleteMk(mk.kode) }} className="btn btn-danger btn-sm" style={{ padding: '4px 8px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                              <Trash style={{ width: '14px', height: '14px' }} />
+                            </button>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -510,91 +564,115 @@ export default function AdminPortal({
           <div className="page-header">
             <div>
               <h2 className="page-title">Pencatatan Poin Kemahasiswaan</h2>
-              <p className="page-subtitle">Kelola rekapitulasi poin pelanggaran disiplin & prestasi penghargaan Mahasiswa.</p>
+              <p className="page-subtitle">
+                {currentRole === 'admin' 
+                  ? 'Melihat rekapitulasi poin pelanggaran & prestasi Mahasiswa (BAK Monitoring).' 
+                  : `Kelola poin pelanggaran disiplin & prestasi Mahasiswa prodi ${adminProdiDept}.`}
+              </p>
             </div>
           </div>
 
-          <div className="dashboard-layout">
+          <div className="dashboard-layout" style={currentRole === 'admin' ? { display: 'block' } : {}}>
             {/* Form Input Poin */}
-            <div className="glass-card glow-gold">
-              <div className="card-header-clean">
-                <h3 className="card-title"><ShieldAlert /> Entri Prestasi & Pelanggaran</h3>
+            {currentRole !== 'admin' && (
+              <div className="glass-card glow-gold">
+                <div className="card-header-clean">
+                  <h3 className="card-title"><ShieldAlert /> Entri Prestasi & Pelanggaran</h3>
+                </div>
+                <form onSubmit={handleAddPoinSubmit}>
+                  <div className="form-group">
+                    <label className="form-label">Pilih Mahasiswa:</label>
+                    <select 
+                      value={selectedTarunaNim}
+                      onChange={(e) => setSelectedTarunaNim(e.target.value)}
+                      className="form-control"
+                    >
+                      <option value="">-- Pilih Mahasiswa --</option>
+                      {filteredTarunaList.map(t => (
+                        <option key={t.nim} value={t.nim}>{t.nim} - {t.nama} ({t.prodi})</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Jenis Log Poin:</label>
+                    <div style={{ display: 'flex', gap: '20px', marginTop: '4px' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                        <input 
+                          type="radio" 
+                          name="poinType" 
+                          value="pelanggaran" 
+                          checked={poinType === 'pelanggaran'}
+                          onChange={() => setPoinType('pelanggaran')}
+                        />
+                        Pelanggaran (Poin Negatif)
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                        <input 
+                          type="radio" 
+                          name="poinType" 
+                          value="prestasi" 
+                          checked={poinType === 'prestasi'}
+                          onChange={() => setPoinType('prestasi')}
+                        />
+                        Prestasi (Poin Positif)
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Besaran Poin:</label>
+                    <input 
+                      type="number" 
+                      value={poinVal}
+                      onChange={(e) => setPoinVal(parseInt(e.target.value) || 0)}
+                      className="form-control"
+                      min={1} max={100}
+                    />
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Poin akan otomatis dikurangi jika pelanggaran, atau ditambahkan jika prestasi.</span>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Deskripsi Kejadian / Keterangan:</label>
+                    <textarea 
+                      value={poinDesc}
+                      onChange={(e) => setPoinDesc(e.target.value)}
+                      className="form-control"
+                      placeholder="Contoh: Terlambat apel pagi 15 menit atau Juara 1 Paduan Suara Tingkat Provinsi"
+                      style={{ height: '80px', resize: 'none' }}
+                    />
+                  </div>
+
+                  <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
+                    Simpan Catatan Poin
+                  </button>
+                </form>
               </div>
-              <form onSubmit={handleAddPoinSubmit}>
-                <div className="form-group">
-                  <label className="form-label">Pilih Mahasiswa:</label>
+            )}
+
+            {/* Rekap Poin Taruna Terpilih */}
+            <div className="glass-card" style={currentRole === 'admin' ? { maxWidth: '800px', margin: '0 auto' } : {}}>
+              <div className="card-header-clean">
+                <h3 className="card-title">Rekap Kepribadian Mahasiswa</h3>
+              </div>
+              
+              {currentRole === 'admin' && (
+                <div className="form-group" style={{ marginBottom: '20px' }}>
+                  <label className="form-label">Pilih Mahasiswa untuk Dimonitor:</label>
                   <select 
                     value={selectedTarunaNim}
                     onChange={(e) => setSelectedTarunaNim(e.target.value)}
                     className="form-control"
+                    style={{ maxWidth: '400px' }}
                   >
                     <option value="">-- Pilih Mahasiswa --</option>
-                    {tarunaList.map(t => (
+                    {filteredTarunaList.map(t => (
                       <option key={t.nim} value={t.nim}>{t.nim} - {t.nama} ({t.prodi})</option>
                     ))}
                   </select>
                 </div>
+              )}
 
-                <div className="form-group">
-                  <label className="form-label">Jenis Log Poin:</label>
-                  <div style={{ display: 'flex', gap: '20px', marginTop: '4px' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                      <input 
-                        type="radio" 
-                        name="poinType" 
-                        value="pelanggaran" 
-                        checked={poinType === 'pelanggaran'}
-                        onChange={() => setPoinType('pelanggaran')}
-                      />
-                      Pelanggaran (Poin Negatif)
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                      <input 
-                        type="radio" 
-                        name="poinType" 
-                        value="prestasi" 
-                        checked={poinType === 'prestasi'}
-                        onChange={() => setPoinType('prestasi')}
-                      />
-                      Prestasi (Poin Positif)
-                    </label>
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Besaran Poin:</label>
-                  <input 
-                    type="number" 
-                    value={poinVal}
-                    onChange={(e) => setPoinVal(parseInt(e.target.value) || 0)}
-                    className="form-control"
-                    min={1} max={100}
-                  />
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Poin akan otomatis dikurangi jika pelanggaran, atau ditambahkan jika prestasi.</span>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Deskripsi Kejadian / Keterangan:</label>
-                  <textarea 
-                    value={poinDesc}
-                    onChange={(e) => setPoinDesc(e.target.value)}
-                    className="form-control"
-                    placeholder="Contoh: Terlambat apel pagi 15 menit atau Juara 1 Paduan Suara Tingkat Provinsi"
-                    style={{ height: '80px', resize: 'none' }}
-                  />
-                </div>
-
-                <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
-                  Simpan Catatan Poin
-                </button>
-              </form>
-            </div>
-
-            {/* Rekap Poin Taruna Terpilih */}
-            <div className="glass-card">
-              <div className="card-header-clean">
-                <h3 className="card-title">Rekap Kepribadian Mahasiswa</h3>
-              </div>
               {selectedTaruna ? (
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', padding: '12px', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-sm)' }}>
@@ -646,7 +724,11 @@ export default function AdminPortal({
           <div className="page-header">
             <div>
               <h2 className="page-title">Konfigurasi Tahun Akademik</h2>
-              <p className="page-subtitle">Atur semester aktif, masa pengisian KRS online, dan tarif UKT dasar.</p>
+              <p className="page-subtitle">
+                {currentRole === 'admin' 
+                  ? 'Melihat semester aktif, masa pengisian KRS online, dan tarif UKT dasar (BAK Monitoring).' 
+                  : 'Atur semester aktif, masa pengisian KRS online, dan tarif UKT dasar.'}
+              </p>
             </div>
           </div>
 
@@ -662,6 +744,7 @@ export default function AdminPortal({
                 value={tempSettings.tahun_ajaran_aktif} 
                 onChange={(e) => setTempSettings({ ...tempSettings, tahun_ajaran_aktif: e.target.value })}
                 className="form-control"
+                disabled={currentRole === 'admin'}
               />
             </div>
 
@@ -669,16 +752,18 @@ export default function AdminPortal({
               <label className="form-label">Masa Pengisian KRS Online:</label>
               <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
                 <button 
-                  onClick={() => setTempSettings({ ...tempSettings, krs_open: true })}
+                  onClick={() => { if (currentRole !== 'admin') setTempSettings({ ...tempSettings, krs_open: true }) }}
                   className={`btn ${tempSettings.krs_open ? 'btn-primary' : 'btn-secondary'}`}
                   style={{ flex: 1 }}
+                  disabled={currentRole === 'admin'}
                 >
                   <Check className="menu-icon" /> Buka Periode KRS
                 </button>
                 <button 
-                  onClick={() => setTempSettings({ ...tempSettings, krs_open: false })}
+                  onClick={() => { if (currentRole !== 'admin') setTempSettings({ ...tempSettings, krs_open: false }) }}
                   className={`btn ${!tempSettings.krs_open ? 'btn-danger' : 'btn-secondary'}`}
                   style={{ flex: 1 }}
+                  disabled={currentRole === 'admin'}
                 >
                   ✕ Tutup Periode KRS
                 </button>
@@ -695,13 +780,16 @@ export default function AdminPortal({
                   onChange={(e) => setTempSettings({ ...tempSettings, tarif_ukt: parseInt(e.target.value) || 0 })}
                   className="form-control"
                   style={{ paddingLeft: '36px' }}
+                  disabled={currentRole === 'admin'}
                 />
               </div>
             </div>
 
-            <button onClick={handleSaveSettings} className="btn btn-success" style={{ width: '100%', marginTop: '12px' }}>
-              <Save className="menu-icon" /> Simpan Pengaturan
-            </button>
+            {currentRole !== 'admin' && (
+              <button onClick={handleSaveSettings} className="btn btn-success" style={{ width: '100%', marginTop: '12px' }}>
+                <Save className="menu-icon" /> Simpan Pengaturan
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -720,7 +808,7 @@ export default function AdminPortal({
             <div className="card-header-clean">
               <h3 className="card-title">Daftar Pengajuan KRS Menunggu Persetujuan</h3>
               <span className="badge badge-primary">
-                {krsList.filter(k => k.status === 'Menunggu Persetujuan Ka. Prodi').length} Pengajuan
+                {filteredKrsList.filter(k => k.status === 'Menunggu Persetujuan Ka. Prodi').length} Pengajuan
               </span>
             </div>
 
@@ -737,14 +825,14 @@ export default function AdminPortal({
                   </tr>
                 </thead>
                 <tbody>
-                  {krsList.filter(k => k.status === 'Menunggu Persetujuan Ka. Prodi').length === 0 ? (
+                  {filteredKrsList.filter(k => k.status === 'Menunggu Persetujuan Ka. Prodi').length === 0 ? (
                     <tr>
                       <td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
                         Tidak ada pengajuan KRS yang menunggu persetujuan Ka. Prodi saat ini.
                       </td>
                     </tr>
                   ) : (
-                    krsList
+                    filteredKrsList
                       .filter(k => k.status === 'Menunggu Persetujuan Ka. Prodi')
                       .map((krs) => {
                         const taruna = tarunaList.find(t => t.nim === krs.nim);
@@ -779,43 +867,47 @@ export default function AdminPortal({
                               <span className="badge badge-warning">Menunggu Ka. Prodi</span>
                             </td>
                             <td style={{ textAlign: 'center' }}>
-                              <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                                <button 
-                                  onClick={() => {
-                                    if (confirm(`Setujui KRS untuk mahasiswa ${taruna?.nama}?`)) {
-                                      onApproveKrs(krs.id, 'Disetujui Ka. Prodi', '');
-                                      alert("KRS Mahasiswa berhasil disetujui oleh Ka. Prodi!");
-                                    }
-                                  }}
-                                  className="btn btn-primary btn-sm"
-                                  style={{ 
-                                    padding: '6px 12px', 
-                                    background: 'rgba(16, 185, 129, 0.15)', 
-                                    color: 'var(--success)', 
-                                    border: '1px solid rgba(16, 185, 129, 0.3)' 
-                                  }}
-                                >
-                                  Setujui
-                                </button>
-                                <button 
-                                  onClick={() => {
-                                    const reason = prompt("Masukkan alasan penolakan KRS:", "Ditolak oleh Ka. Prodi");
-                                    if (reason !== null) {
-                                      onApproveKrs(krs.id, 'Ditolak', reason);
-                                      alert("KRS Mahasiswa ditolak/dikembalikan.");
-                                    }
-                                  }}
-                                  className="btn btn-danger btn-sm"
-                                  style={{ 
-                                    padding: '6px 12px', 
-                                    background: 'rgba(239, 68, 68, 0.15)', 
-                                    color: 'var(--danger)', 
-                                    border: '1px solid rgba(239, 68, 68, 0.3)' 
-                                  }}
-                                >
-                                  Tolak
-                                </button>
-                              </div>
+                              {currentRole !== 'admin' ? (
+                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                                  <button 
+                                    onClick={() => {
+                                      if (confirm(`Setujui KRS untuk mahasiswa ${taruna?.nama}?`)) {
+                                        onApproveKrs(krs.id, 'Disetujui Ka. Prodi', '');
+                                        alert("KRS Mahasiswa berhasil disetujui oleh Ka. Prodi!");
+                                      }
+                                    }}
+                                    className="btn btn-primary btn-sm"
+                                    style={{ 
+                                      padding: '6px 12px', 
+                                      background: 'rgba(16, 185, 129, 0.15)', 
+                                      color: 'var(--success)', 
+                                      border: '1px solid rgba(16, 185, 129, 0.3)' 
+                                    }}
+                                  >
+                                    Setujui
+                                  </button>
+                                  <button 
+                                    onClick={() => {
+                                      const reason = prompt("Masukkan alasan penolakan KRS:", "Ditolak oleh Ka. Prodi");
+                                      if (reason !== null) {
+                                        onApproveKrs(krs.id, 'Ditolak', reason);
+                                        alert("KRS Mahasiswa ditolak/dikembalikan.");
+                                      }
+                                    }}
+                                    className="btn btn-danger btn-sm"
+                                    style={{ 
+                                      padding: '6px 12px', 
+                                      background: 'rgba(239, 68, 68, 0.15)', 
+                                      color: 'var(--danger)', 
+                                      border: '1px solid rgba(239, 68, 68, 0.3)' 
+                                    }}
+                                  >
+                                    Tolak
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className="badge badge-info" style={{ textTransform: 'none' }}>Hanya Monitoring</span>
+                              )}
                             </td>
                           </tr>
                         );
