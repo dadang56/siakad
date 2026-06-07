@@ -538,139 +538,97 @@ export default function DosenPortal({
         </div>
       )}
 
-      {/* 4. ATTENDANCE (PRESENSI KELAS) */}
+      {/* 4. ATTENDANCE (MONITORING PRESENSI) */}
       {activeMenu === 'presensi' && (
         <div className="animate-fade-in">
           <div className="page-header">
             <div>
-              <h2 className="page-title">Input Presensi Kuliah</h2>
-              <p className="page-subtitle">Rekam dan edit kehadiran mahasiswa pada kelas Anda semester ini.</p>
+              <h2 className="page-title">Monitoring presensi mahasiswa</h2>
+              <p className="page-subtitle">Daftar kehadiran perkuliahan mahasiswa bimbingan akademik Anda yang ter-plotting (sinkron otomatis dengan LMS).</p>
             </div>
           </div>
 
-          <div className="glass-card" style={{ marginBottom: '24px' }}>
-            <div className="form-group" style={{ maxWidth: '400px', marginBottom: 0 }}>
-              <label className="form-label">Pilih Kelas Kuliah:</label>
-              <select 
-                value={selectedKelasId} 
-                onChange={(e) => handleSelectKelasForAttendance(e.target.value)}
-                className="form-control"
-              >
-                <option value="">-- Pilih Kelas --</option>
-                {taughtClasses.map((c) => {
-                  const mk = matakuliahList.find(m => m.kode === c.matakuliah_kode);
-                  return (
-                    <option key={c.id} value={c.id}>
-                      {c.id} - {mk?.nama}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {advisoryCadets.map(student => {
+              const studentKrs = krsList.find(k => k.nim === student.nim && k.status === 'Disetujui Ka. Prodi');
+              const enrolledKelasIds = studentKrs ? studentKrs.kelas_ids : [];
 
-          {selectedKelasId ? (
-            <div className="glass-card glow-blue">
-              <div className="card-header-clean">
-                <div>
-                  <h3 className="card-title">Absensi Kelas: {selectedKelasId}</h3>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Mengedit total jumlah pertemuan. Total pertemuan ideal adalah 16 kali.</span>
+              return (
+                <div key={student.nim} className="glass-card glow-blue">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', paddingBottom: '12px', marginBottom: '16px' }}>
+                    <div>
+                      <h3 style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)' }}>{student.nama}</h3>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '12px', marginBottom: 0 }}>NIM: {student.nim} | Program Studi: {student.prodi} | Semester {student.semester}</p>
+                    </div>
+                    <div>
+                      <span className={`badge ${studentKrs ? 'badge-success' : 'badge-danger'}`}>
+                        {studentKrs ? 'KRS Disetujui' : 'Belum Plotting KRS'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {enrolledKelasIds.length > 0 ? (
+                    <div className="table-container">
+                      <table className="custom-table">
+                        <thead>
+                          <tr>
+                            <th>ID Kelas</th>
+                            <th>Mata Kuliah</th>
+                            <th style={{ textAlign: 'center', width: '80px' }}>Hadir</th>
+                            <th style={{ textAlign: 'center', width: '80px' }}>Sakit</th>
+                            <th style={{ textAlign: 'center', width: '80px' }}>Izin</th>
+                            <th style={{ textAlign: 'center', width: '80px' }}>Alfa</th>
+                            <th style={{ textAlign: 'center', width: '120px' }}>Total Pertemuan</th>
+                            <th style={{ textAlign: 'center', width: '100px' }}>Kehadiran (%)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {enrolledKelasIds.map(kelasId => {
+                            const cl = kelasList.find(c => c.id === kelasId);
+                            const mk = matakuliahList.find(m => m.kode === cl?.matakuliah_kode);
+                            const pres = presensiList.find(p => p.nim === student.nim && p.kelas_id === kelasId) || 
+                              { total_pertemuan: 16, hadir: 16, sakit: 0, izin: 0, alfa: 0 };
+                            
+                            const percent = pres.total_pertemuan > 0 ? ((pres.hadir / pres.total_pertemuan) * 100).toFixed(0) : 0;
+
+                            return (
+                              <tr key={kelasId}>
+                                <td><strong>{kelasId}</strong></td>
+                                <td>
+                                  <div>{mk?.nama || 'Mata Kuliah'}</div>
+                                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{mk?.kode}</span>
+                                </td>
+                                <td style={{ textAlign: 'center' }}>{pres.hadir}</td>
+                                <td style={{ textAlign: 'center' }}>{pres.sakit}</td>
+                                <td style={{ textAlign: 'center' }}>{pres.izin}</td>
+                                <td style={{ textAlign: 'center' }}>{pres.alfa}</td>
+                                <td style={{ textAlign: 'center' }}>{pres.total_pertemuan} Sesi</td>
+                                <td style={{ textAlign: 'center' }}>
+                                  <span className={`badge ${percent >= 75 ? 'badge-success' : 'badge-danger'}`}>
+                                    {percent}%
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '16px', color: 'var(--text-muted)', fontSize: '13px' }}>
+                      Belum ada mata kuliah yang di-plotting/disetujui untuk semester ini.
+                    </div>
+                  )}
                 </div>
-                <button onClick={handleSaveAttendanceSubmit} className="btn btn-success btn-sm">
-                  <Save className="menu-icon" /> Simpan Presensi
-                </button>
+              );
+            })}
+            
+            {advisoryCadets.length === 0 && (
+              <div className="glass-card" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>
+                Anda tidak memiliki mahasiswa bimbingan akademik.
               </div>
-
-              {Object.keys(attendanceState).length > 0 ? (
-                <div className="table-container">
-                  <table className="custom-table">
-                    <thead>
-                      <tr>
-                        <th>NIM</th>
-                        <th>Nama Mahasiswa</th>
-                        <th style={{ width: '80px', textAlign: 'center' }}>Hadir</th>
-                        <th style={{ width: '80px', textAlign: 'center' }}>Sakit</th>
-                        <th style={{ width: '80px', textAlign: 'center' }}>Izin</th>
-                        <th style={{ width: '80px', textAlign: 'center' }}>Alfa</th>
-                        <th style={{ width: '120px', textAlign: 'center' }}>Total Sesi</th>
-                        <th style={{ width: '100px', textAlign: 'center' }}>Kehadiran (%)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {tarunaList
-                        .filter(t => attendanceState[t.nim] !== undefined)
-                        .map(taruna => {
-                          const nim = taruna.nim;
-                          const pres = attendanceState[nim];
-                          const percent = pres.total_pertemuan > 0 ? ((pres.hadir / pres.total_pertemuan) * 100).toFixed(0) : 0;
-                          
-                          return (
-                            <tr key={nim}>
-                              <td>{nim}</td>
-                              <td><strong>{taruna.nama}</strong></td>
-                              <td style={{ textAlign: 'center' }}>
-                                <input 
-                                  type="number" 
-                                  value={pres.hadir} 
-                                  onChange={(e) => handleAttendanceChange(nim, 'hadir', e.target.value)}
-                                  className="form-control"
-                                  style={{ width: '60px', padding: '6px', textAlign: 'center', margin: '0 auto' }}
-                                  min={0}
-                                />
-                              </td>
-                              <td style={{ textAlign: 'center' }}>
-                                <input 
-                                  type="number" 
-                                  value={pres.sakit} 
-                                  onChange={(e) => handleAttendanceChange(nim, 'sakit', e.target.value)}
-                                  className="form-control"
-                                  style={{ width: '60px', padding: '6px', textAlign: 'center', margin: '0 auto' }}
-                                  min={0}
-                                />
-                              </td>
-                              <td style={{ textAlign: 'center' }}>
-                                <input 
-                                  type="number" 
-                                  value={pres.izin} 
-                                  onChange={(e) => handleAttendanceChange(nim, 'izin', e.target.value)}
-                                  className="form-control"
-                                  style={{ width: '60px', padding: '6px', textAlign: 'center', margin: '0 auto' }}
-                                  min={0}
-                                />
-                              </td>
-                              <td style={{ textAlign: 'center' }}>
-                                <input 
-                                  type="number" 
-                                  value={pres.alfa} 
-                                  onChange={(e) => handleAttendanceChange(nim, 'alfa', e.target.value)}
-                                  className="form-control"
-                                  style={{ width: '60px', padding: '6px', textAlign: 'center', margin: '0 auto' }}
-                                  min={0}
-                                />
-                              </td>
-                              <td style={{ textAlign: 'center', fontWeight: '500' }}>
-                                {pres.total_pertemuan} Sesi
-                              </td>
-                              <td style={{ textAlign: 'center' }}>
-                                <span className={`badge ${percent >= 75 ? 'badge-success' : 'badge-danger'}`}>
-                                  {percent}%
-                                </span>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>Belum ada Mahasiswa terdaftar di kelas ini.</div>
-              )}
-            </div>
-          ) : (
-            <div className="glass-card" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>
-              Silakan pilih kelas kuliah pada dropdown di atas untuk mengisi absensi.
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
 

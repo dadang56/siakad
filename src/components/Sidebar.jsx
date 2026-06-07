@@ -38,7 +38,7 @@ export default function Sidebar({
         return [
           { id: 'dashboard', label: 'Dashboard Dosen', icon: LayoutDashboard },
           { id: 'perwalian', label: 'Bimbingan KRS Mahasiswa', icon: UserCheck },
-          { id: 'presensi', label: 'Monitoring Presensi Mahasiswa yang sinkron dengan LMS', icon: CheckSquare }
+          { id: 'presensi', label: 'Monitoring presensi mahasiswa', icon: CheckSquare }
         ];
       case 'admin':
         return [
