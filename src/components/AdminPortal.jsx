@@ -874,164 +874,7 @@ export default function AdminPortal({
             </div>
           </div>
 
-          {/* Sub-view: Kelola Bimbingan Dosen */}
-          {activeDosenForBimbingan && (
-            <div className="modal-overlay" style={{ display: 'flex' }}>
-              <div className="modal-content" style={{ maxWidth: '750px', width: '90%' }}>
-                <div className="modal-header">
-                  <h3>Bimbingan Akademik: {activeDosenForBimbingan.nama}</h3>
-                  <button onClick={() => setActiveDosenForBimbingan(null)} className="btn-close">✕</button>
-                </div>
-                <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-                  
-                  {/* Search and assign student form */}
-                  {currentRole !== 'admin' && (
-                    <div className="glass-card" style={{ marginBottom: '20px', padding: '16px', background: 'rgba(255, 255, 255, 0.02)' }}>
-                      <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Assign Mahasiswa Bimbingan Baru</h4>
-                      
-                      <div style={{ display: 'flex', gap: '12px' }}>
-                        <div style={{ flex: 1, position: 'relative' }}>
-                          <input 
-                            type="text" 
-                            placeholder="Cari mahasiswa berdasarkan Nama atau NIM..." 
-                            value={bimbinganSearchQuery}
-                            onChange={(e) => setBimbinganSearchQuery(e.target.value)}
-                            className="form-control"
-                          />
-                          
-                          {/* Autocomplete list based on bimbinganSearchQuery */}
-                          {bimbinganSearchQuery.trim() !== '' && (
-                            <div style={{ 
-                              position: 'absolute', 
-                              top: '100%', 
-                              left: 0, 
-                              right: 0, 
-                              background: 'var(--bg-secondary)', 
-                              border: '1px solid var(--glass-border)', 
-                              borderRadius: 'var(--radius-sm)', 
-                              zIndex: 1000,
-                              maxHeight: '200px',
-                              overflowY: 'auto',
-                              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
-                            }}>
-                              {rawUsersList
-                                .filter(u => u.role === 'mahasiswa' && u.dosen_utama_id !== activeDosenForBimbingan.id)
-                                .filter(u => 
-                                  u.nama?.toLowerCase().includes(bimbinganSearchQuery.toLowerCase()) || 
-                                  u.nim_nip?.toLowerCase().includes(bimbinganSearchQuery.toLowerCase())
-                                )
-                                .slice(0, 8)
-                                .map(s => (
-                                  <div 
-                                    key={s.id}
-                                    onClick={() => {
-                                      setSelectedBimbinganStudentId(s.id);
-                                      setBimbinganSearchQuery(`${s.nim_nip} - ${s.nama}`);
-                                    }}
-                                    style={{ 
-                                      padding: '8px 12px', 
-                                      cursor: 'pointer',
-                                      borderBottom: '1px solid var(--glass-border)'
-                                    }}
-                                    className="hover-bg-accent"
-                                  >
-                                    <strong>{s.nim_nip}</strong> | {s.nama} ({PRODI_MAP_FROM_DB[s.prodi_id] || '-'})
-                                  </div>
-                                ))}
-                              {rawUsersList
-                                .filter(u => u.role === 'mahasiswa' && u.dosen_utama_id !== activeDosenForBimbingan.id)
-                                .filter(u => 
-                                  u.nama?.toLowerCase().includes(bimbinganSearchQuery.toLowerCase()) || 
-                                  u.nim_nip?.toLowerCase().includes(bimbinganSearchQuery.toLowerCase())
-                                ).length === 0 && (
-                                  <div style={{ padding: '8px 12px', color: 'var(--text-muted)' }}>Tidak ditemukan mahasiswa yang cocok</div>
-                                )}
-                            </div>
-                          )}
-                        </div>
-                        
-                        <button 
-                          onClick={() => {
-                            if (selectedBimbinganStudentId) {
-                              onAssignBimbingan(selectedBimbinganStudentId, activeDosenForBimbingan.id);
-                              setBimbinganSearchQuery('');
-                              setSelectedBimbinganStudentId('');
-                            } else {
-                              alert('Pilih mahasiswa dari daftar hasil pencarian.');
-                            }
-                          }}
-                          className="btn btn-primary"
-                          style={{ whiteSpace: 'nowrap' }}
-                        >
-                          Tambahkan
-                        </button>
-                      </div>
-                    </div>
-                  )}
 
-                  {/* List of currently assigned students */}
-                  <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '12px' }}>Daftar Mahasiswa Bimbingan Saat Ini</h4>
-                  
-                  <div className="table-container">
-                    <table className="custom-table">
-                      <thead>
-                        <tr>
-                          <th>NIM</th>
-                          <th>Nama Mahasiswa</th>
-                          <th>Program Studi / Kelas</th>
-                          {currentRole !== 'admin' && <th style={{ textAlign: 'center' }}>Aksi</th>}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rawUsersList
-                          .filter(u => u.role === 'mahasiswa' && u.dosen_utama_id === activeDosenForBimbingan.id)
-                          .length === 0 ? (
-                            <tr>
-                              <td colSpan={currentRole !== 'admin' ? "4" : "3"} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px' }}>
-                                Belum ada mahasiswa bimbingan yang ditugaskan ke dosen ini.
-                              </td>
-                            </tr>
-                          ) : (
-                            rawUsersList
-                              .filter(u => u.role === 'mahasiswa' && u.dosen_utama_id === activeDosenForBimbingan.id)
-                              .map(s => {
-                                const userProdi = PRODI_MAP_FROM_DB[s.prodi_id] || '-';
-                                const userKelas = kelasList.find(c => c.id === s.kelas_id)?.nama || '-';
-                                return (
-                                  <tr key={s.id}>
-                                    <td>{s.nim_nip}</td>
-                                    <td><strong>{s.nama}</strong></td>
-                                    <td>{userProdi} / {userKelas}</td>
-                                    {currentRole !== 'admin' && (
-                                      <td style={{ textAlign: 'center' }}>
-                                        <button 
-                                          onClick={() => {
-                                            if (confirm(`Hapus bimbingan mahasiswa ${s.nama} dari dosen ini?`)) {
-                                              onRemoveBimbingan(s.id);
-                                            }
-                                          }}
-                                          className="btn btn-danger btn-sm"
-                                          style={{ padding: '4px 10px', background: 'rgba(239, 68, 68, 0.15)', color: 'var(--danger)', border: '1px solid rgba(239, 68, 68, 0.3)' }}
-                                        >
-                                          Hapus
-                                        </button>
-                                      </td>
-                                    )}
-                                  </tr>
-                                );
-                              })
-                          )}
-                      </tbody>
-                    </table>
-                  </div>
-
-                </div>
-                <div className="modal-footer">
-                  <button className="btn btn-secondary btn-sm" onClick={() => setActiveDosenForBimbingan(null)}>Tutup</button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       )}
 
@@ -2085,6 +1928,165 @@ export default function AdminPortal({
                 <button type="submit" className="btn btn-primary btn-sm">Simpan</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Sub-view: Kelola Bimbingan Dosen */}
+      {activeDosenForBimbingan && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '750px', width: '90%' }}>
+            <div className="modal-header">
+              <h3>Bimbingan Akademik: {activeDosenForBimbingan.nama}</h3>
+              <button onClick={() => setActiveDosenForBimbingan(null)} className="btn-close">✕</button>
+            </div>
+            <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+              
+              {/* Search and assign student form */}
+              {currentRole !== 'admin' && (
+                <div className="glass-card" style={{ marginBottom: '20px', padding: '16px', background: 'rgba(255, 255, 255, 0.02)' }}>
+                  <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px' }}>Assign Mahasiswa Bimbingan Baru</h4>
+                  
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <div style={{ flex: 1, position: 'relative' }}>
+                      <input 
+                        type="text" 
+                        placeholder="Cari mahasiswa berdasarkan Nama atau NIM..." 
+                        value={bimbinganSearchQuery}
+                        onChange={(e) => setBimbinganSearchQuery(e.target.value)}
+                        className="form-control"
+                      />
+                      
+                      {/* Autocomplete list based on bimbinganSearchQuery */}
+                      {bimbinganSearchQuery.trim() !== '' && (
+                        <div style={{ 
+                          position: 'absolute', 
+                          top: '100%', 
+                          left: 0, 
+                          right: 0, 
+                          background: 'var(--bg-secondary)', 
+                          border: '1px solid var(--glass-border)', 
+                          borderRadius: 'var(--radius-sm)', 
+                          zIndex: 1000,
+                          maxHeight: '200px',
+                          overflowY: 'auto',
+                          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
+                        }}>
+                          {rawUsersList
+                            .filter(u => u.role === 'mahasiswa' && u.dosen_utama_id !== activeDosenForBimbingan.id)
+                            .filter(u => 
+                              u.nama?.toLowerCase().includes(bimbinganSearchQuery.toLowerCase()) || 
+                              u.nim_nip?.toLowerCase().includes(bimbinganSearchQuery.toLowerCase())
+                            )
+                            .slice(0, 8)
+                            .map(s => (
+                              <div 
+                                key={s.id}
+                                onClick={() => {
+                                  setSelectedBimbinganStudentId(s.id);
+                                  setBimbinganSearchQuery(`${s.nim_nip} - ${s.nama}`);
+                                }}
+                                style={{ 
+                                  padding: '8px 12px', 
+                                  cursor: 'pointer',
+                                  borderBottom: '1px solid var(--glass-border)'
+                                }}
+                                className="hover-bg-accent"
+                              >
+                                <strong>{s.nim_nip}</strong> | {s.nama} ({PRODI_MAP_FROM_DB[s.prodi_id] || '-'})
+                              </div>
+                            ))}
+                          {rawUsersList
+                            .filter(u => u.role === 'mahasiswa' && u.dosen_utama_id !== activeDosenForBimbingan.id)
+                            .filter(u => 
+                              u.nama?.toLowerCase().includes(bimbinganSearchQuery.toLowerCase()) || 
+                              u.nim_nip?.toLowerCase().includes(bimbinganSearchQuery.toLowerCase())
+                            ).length === 0 && (
+                              <div style={{ padding: '8px 12px', color: 'var(--text-muted)' }}>Tidak ditemukan mahasiswa yang cocok</div>
+                            )}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <button 
+                      onClick={() => {
+                        if (selectedBimbinganStudentId) {
+                          onAssignBimbingan(selectedBimbinganStudentId, activeDosenForBimbingan.id);
+                          setBimbinganSearchQuery('');
+                          setSelectedBimbinganStudentId('');
+                        } else {
+                          alert('Pilih mahasiswa dari daftar hasil pencarian.');
+                        }
+                      }}
+                      className="btn btn-primary"
+                      style={{ whiteSpace: 'nowrap' }}
+                    >
+                      Tambahkan
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* List of currently assigned students */}
+              <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '12px' }}>Daftar Mahasiswa Bimbingan Saat Ini</h4>
+              
+              <div className="table-container">
+                <table className="custom-table">
+                  <thead>
+                    <tr>
+                      <th>NIM</th>
+                      <th>Nama Mahasiswa</th>
+                      <th>Program Studi / Kelas</th>
+                      {currentRole !== 'admin' && <th style={{ textAlign: 'center' }}>Aksi</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rawUsersList
+                      .filter(u => u.role === 'mahasiswa' && u.dosen_utama_id === activeDosenForBimbingan.id)
+                      .length === 0 ? (
+                        <tr>
+                          <td colSpan={currentRole !== 'admin' ? "4" : "3"} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px' }}>
+                            Belum ada mahasiswa bimbingan yang ditugaskan ke dosen ini.
+                          </td>
+                        </tr>
+                      ) : (
+                        rawUsersList
+                          .filter(u => u.role === 'mahasiswa' && u.dosen_utama_id === activeDosenForBimbingan.id)
+                          .map(s => {
+                            const userProdi = PRODI_MAP_FROM_DB[s.prodi_id] || '-';
+                            const userKelas = kelasList.find(c => c.id === s.kelas_id)?.nama || '-';
+                            return (
+                              <tr key={s.id}>
+                                <td>{s.nim_nip}</td>
+                                <td><strong>{s.nama}</strong></td>
+                                <td>{userProdi} / {userKelas}</td>
+                                {currentRole !== 'admin' && (
+                                  <td style={{ textAlign: 'center' }}>
+                                    <button 
+                                      onClick={() => {
+                                        if (confirm(`Hapus bimbingan mahasiswa ${s.nama} dari dosen ini?`)) {
+                                          onRemoveBimbingan(s.id);
+                                        }
+                                      }}
+                                      className="btn btn-danger btn-sm"
+                                      style={{ padding: '4px 10px', background: 'rgba(239, 68, 68, 0.15)', color: 'var(--danger)', border: '1px solid rgba(239, 68, 68, 0.3)' }}
+                                    >
+                                      Hapus
+                                    </button>
+                                  </td>
+                                )}
+                              </tr>
+                            );
+                          })
+                      )}
+                  </tbody>
+                </table>
+              </div>
+
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary btn-sm" onClick={() => setActiveDosenForBimbingan(null)}>Tutup</button>
+            </div>
           </div>
         </div>
       )}
