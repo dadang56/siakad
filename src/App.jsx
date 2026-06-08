@@ -1705,91 +1705,93 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="app-content">
-        {currentRole === 'taruna' && (
-          <TarunaPortal 
-            currentUser={currentUser}
-            activeMenu={activeMenu}
-            matakuliahList={matakuliahList}
-            kelasList={classSessionsList}
-            krsList={krsList}
-            nilaiList={nilaiList}
-            presensiList={presensiList}
-            dosenList={dosenList}
-            settings={settings}
-            onSaveKrs={handleSaveKrs}
-            onPayUkt={handlePayUkt}
-            onPrintKhs={handlePrintKhs}
-          />
-        )}
+        <div key={`${currentRole}-${activeMenu}`} className="animate-page-transition" style={{ width: '100%' }}>
+          {currentRole === 'taruna' && (
+            <TarunaPortal 
+              currentUser={currentUser}
+              activeMenu={activeMenu}
+              matakuliahList={matakuliahList}
+              kelasList={classSessionsList}
+              krsList={krsList}
+              nilaiList={nilaiList}
+              presensiList={presensiList}
+              dosenList={dosenList}
+              settings={settings}
+              onSaveKrs={handleSaveKrs}
+              onPayUkt={handlePayUkt}
+              onPrintKhs={handlePrintKhs}
+            />
+          )}
 
-        {currentRole === 'dosen' && (
-          <DosenPortal 
-            currentUser={currentUser}
-            activeMenu={activeMenu}
-            tarunaList={tarunaList}
-            matakuliahList={matakuliahList}
-            kelasList={classSessionsList}
-            krsList={krsList}
-            nilaiList={nilaiList}
-            presensiList={presensiList}
-            onApproveKrs={handleApproveKrs}
-            onSaveGrades={handleSaveGrades}
-            onSaveAttendance={handleSaveAttendance}
-          />
-        )}
+          {currentRole === 'dosen' && (
+            <DosenPortal 
+              currentUser={currentUser}
+              activeMenu={activeMenu}
+              tarunaList={tarunaList}
+              matakuliahList={matakuliahList}
+              kelasList={classSessionsList}
+              krsList={krsList}
+              nilaiList={nilaiList}
+              presensiList={presensiList}
+              onApproveKrs={handleApproveKrs}
+              onSaveGrades={handleSaveGrades}
+              onSaveAttendance={handleSaveAttendance}
+            />
+          )}
 
-        {(currentRole === 'admin' || currentRole === 'admin_prodi') && (
-          <AdminPortal 
-            activeMenu={activeMenu}
-            tarunaList={tarunaList}
-            dosenList={dosenList}
-            matakuliahList={matakuliahList}
-            kelasList={kelasList}
-            krsList={krsList}
-            nilaiList={nilaiList}
-            settings={settings}
-            onUpdateSettings={handleUpdateSettings}
-            onAddTaruna={handleAddTaruna}
-            onEditTaruna={handleEditTaruna}
-            onDeleteTaruna={handleDeleteTaruna}
-            onAddDosen={handleAddDosen}
-            onEditDosen={handleEditDosen}
-            onDeleteDosen={handleDeleteDosen}
-            onAddMk={handleAddMk}
-            onEditMk={handleEditMk}
-            onDeleteMk={handleDeleteMk}
-            onAddPoin={handleAddPoin}
-            onSyncMk={fetchMataKuliahFromSupabase}
-            onApproveKrs={handleApproveKrs}
-            currentRole={currentRole}
-            adminProdiDept={adminProdiDept}
-            
-            rawUsersList={rawUsersList}
-            jadwalPembelajaranList={jadwalPembelajaranList}
-            onAddUser={handleAddUser}
-            onEditUser={handleEditUser}
-            onDeleteUser={handleDeleteUser}
-            onAddKelas={handleAddKelas}
-            onEditKelas={handleEditKelas}
-            onDeleteKelas={handleDeleteKelas}
-            onAddJadwal={handleAddJadwal}
-            onEditJadwal={handleEditJadwal}
-            onDeleteJadwal={handleDeleteJadwal}
-            onAssignBimbingan={handleAssignBimbingan}
-            onRemoveBimbingan={handleRemoveBimbingan}
-            onPrintKhs={handlePrintKhs}
-          />
-        )}
+          {(currentRole === 'admin' || currentRole === 'admin_prodi') && (
+            <AdminPortal 
+              activeMenu={activeMenu}
+              tarunaList={tarunaList}
+              dosenList={dosenList}
+              matakuliahList={matakuliahList}
+              kelasList={kelasList}
+              krsList={krsList}
+              nilaiList={nilaiList}
+              settings={settings}
+              onUpdateSettings={handleUpdateSettings}
+              onAddTaruna={handleAddTaruna}
+              onEditTaruna={handleEditTaruna}
+              onDeleteTaruna={handleDeleteTaruna}
+              onAddDosen={handleAddDosen}
+              onEditDosen={handleEditDosen}
+              onDeleteDosen={handleDeleteDosen}
+              onAddMk={handleAddMk}
+              onEditMk={handleEditMk}
+              onDeleteMk={handleDeleteMk}
+              onAddPoin={handleAddPoin}
+              onSyncMk={fetchMataKuliahFromSupabase}
+              onApproveKrs={handleApproveKrs}
+              currentRole={currentRole}
+              adminProdiDept={adminProdiDept}
+              
+              rawUsersList={rawUsersList}
+              jadwalPembelajaranList={jadwalPembelajaranList}
+              onAddUser={handleAddUser}
+              onEditUser={handleEditUser}
+              onDeleteUser={handleDeleteUser}
+              onAddKelas={handleAddKelas}
+              onEditKelas={handleEditKelas}
+              onDeleteKelas={handleDeleteKelas}
+              onAddJadwal={handleAddJadwal}
+              onEditJadwal={handleEditJadwal}
+              onDeleteJadwal={handleDeleteJadwal}
+              onAssignBimbingan={handleAssignBimbingan}
+              onRemoveBimbingan={handleRemoveBimbingan}
+              onPrintKhs={handlePrintKhs}
+            />
+          )}
 
-        {currentRole === 'keuangan' && (
-          <KeuanganPortal 
-            activeMenu={activeMenu}
-            tarunaList={tarunaList}
-            settings={settings}
-            onConfirmUkt={handlePayUkt}
-            onUpdateSettings={handleUpdateSettings}
-          />
-        )}
+          {currentRole === 'keuangan' && (
+            <KeuanganPortal 
+              activeMenu={activeMenu}
+              tarunaList={tarunaList}
+              settings={settings}
+              onConfirmUkt={handlePayUkt}
+              onUpdateSettings={handleUpdateSettings}
+            />
+          )}
+        </div>
       </main>
     </div>
   );
