@@ -27,12 +27,12 @@ export default function TarunaPortal({
   dosenList, 
   settings, 
   onSaveKrs, 
-  onPayUkt 
+  onPayUkt,
+  onPrintKhs
 }) {
   
   const [selectedKelasIds, setSelectedKelasIds] = useState([]);
   const [showPrintKrs, setShowPrintKrs] = useState(false);
-  const [showPrintKhs, setShowPrintKhs] = useState(false);
   const [selectedSemester, setSelectedSemester] = useState(4);
 
   // Retrieve current KRS
@@ -558,9 +558,32 @@ export default function TarunaPortal({
                       <option value={4}>Semester 4 (Aktif)</option>
                     </select>
                   </div>
-                  {semesterGrades.length > 0 && (
-                    <button onClick={() => setShowPrintKhs(true)} className="btn btn-secondary btn-sm">
-                      <Printer className="menu-icon" /> Cetak KHS (Mock)
+                   {semesterGrades.length > 0 && (
+                    <button 
+                      onClick={() => {
+                        const totalSks = semesterGrades.reduce((sum, g) => sum + (g.sks || 0), 0);
+                        const totalSksBobot = semesterGrades.reduce((sum, g) => sum + ((g.sks || 0) * getBobot(g.nilai_huruf)), 0);
+                        onPrintKhs({
+                          student: {
+                            nama: currentUser.nama,
+                            nim_nip: currentUser.nim
+                          },
+                          grades: semesterGrades.map(g => ({
+                            ...g,
+                            nama_mk: g.nama_mk || matakuliahList.find(m => m.kode === g.matakuliah_kode)?.nama || 'Mata Kuliah'
+                          })),
+                          semester: selectedSemester,
+                          tahun_ajaran: settings.tahun_ajaran_aktif,
+                          totalSks,
+                          totalSksBobot,
+                          ips: calculatedIPS,
+                          prodiName: currentUser.prodi,
+                          angkatan: currentUser.angkatan || '36'
+                        });
+                      }} 
+                      className="btn btn-secondary btn-sm"
+                    >
+                      <Printer className="menu-icon" /> Cetak KHS
                     </button>
                   )}
                 </div>
@@ -964,83 +987,7 @@ export default function TarunaPortal({
         </div>
       )}
 
-      {/* MOCK PRINT KHS MODAL */}
-      {showPrintKhs && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '750px', background: 'white', color: '#1e293b' }}>
-            <div className="modal-header" style={{ borderColor: '#e2e8f0' }}>
-              <h3 style={{ color: '#0f172a' }}>KHS Cetak Preview</h3>
-              <button onClick={() => setShowPrintKhs(false)} className="btn-close" style={{ color: '#64748b' }}>✕</button>
-            </div>
-            <div className="modal-body print-container">
-              <div className="print-header">
-                <div className="print-title">Politeknik Transportasi SDP Palembang</div>
-                <div className="print-subtitle">Kementerian Perhubungan Republik Indonesia</div>
-                <div style={{ fontSize: '10px', marginTop: '4px' }}>Jl. Sabar Jaya No.116, Perajen, Banyuasin, Sumatera Selatan</div>
-              </div>
-              <div style={{ textAlign: 'center', fontWeight: 'bold', textDecoration: 'underline', marginBottom: '20px' }}>
-                KARTU HASIL STUDI (KHS)
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '12px', marginBottom: '20px' }}>
-                <div>
-                  <div>NIM: <strong>{currentUser.nim}</strong></div>
-                  <div>Nama: <strong>{currentUser.nama}</strong></div>
-                  <div>Prodi: <strong>{currentUser.prodi}</strong></div>
-                </div>
-                <div>
-                  <div>Tahun Ajaran: <strong>{settings.tahun_ajaran_aktif}</strong></div>
-                  <div>Semester KHS: <strong>{selectedSemester}</strong></div>
-                  <div>IPS: <strong>{calculatedIPS}</strong></div>
-                </div>
-              </div>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', marginBottom: '20px' }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid #0f172a', borderTop: '2px solid #0f172a' }}>
-                    <th style={{ padding: '8px', textAlign: 'left' }}>No</th>
-                    <th style={{ padding: '8px', textAlign: 'left' }}>Kode MK</th>
-                    <th style={{ padding: '8px', textAlign: 'left' }}>Mata Kuliah</th>
-                    <th style={{ padding: '8px', textAlign: 'center' }}>SKS</th>
-                    <th style={{ padding: '8px', textAlign: 'center' }}>Nilai Akhir</th>
-                    <th style={{ padding: '8px', textAlign: 'center' }}>Nilai Huruf</th>
-                    <th style={{ padding: '8px', textAlign: 'center' }}>Bobot</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {semesterGrades.map((g, idx) => (
-                    <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                      <td style={{ padding: '8px' }}>{idx + 1}</td>
-                      <td style={{ padding: '8px' }}>{g.matakuliah_kode}</td>
-                      <td style={{ padding: '8px' }}>{g.nama_mk || matakuliahList.find(m => m.kode === g.matakuliah_kode)?.nama}</td>
-                      <td style={{ padding: '8px', textAlign: 'center' }}>{g.sks}</td>
-                      <td style={{ padding: '8px', textAlign: 'center' }}>{g.nilai_akhir ? g.nilai_akhir.toFixed(1) : '-'}</td>
-                      <td style={{ padding: '8px', textAlign: 'center' }}>{g.nilai_huruf}</td>
-                      <td style={{ padding: '8px', textAlign: 'center' }}>{getBobot(g.nilai_huruf).toFixed(1)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', textAlign: 'center', fontSize: '11px', marginTop: '40px' }}>
-                <div>
-                  <div>Diketahui oleh,</div>
-                  <div style={{ marginTop: '50px', fontWeight: 'bold' }}>({dosenWali?.nama})</div>
-                  <div>Dosen Wali</div>
-                </div>
-                <div>
-                  <div>Palembang, {new Date().toLocaleDateString('id-ID')}</div>
-                  <div style={{ marginTop: '50px', fontWeight: 'bold' }}>(Direktur / Ka. Adm. Akademik)</div>
-                  <div>Bagian Administrasi Akademik</div>
-                </div>
-              </div>
-            </div>
-            <div className="modal-footer" style={{ background: '#f8fafc', borderColor: '#e2e8f0' }}>
-              <button className="btn btn-secondary btn-sm" onClick={() => window.print()}>
-                <Printer className="menu-icon" /> Print PDF
-              </button>
-              <button className="btn btn-primary btn-sm" onClick={() => setShowPrintKhs(false)}>Tutup</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Print modals end */}
     </div>
   );
 }

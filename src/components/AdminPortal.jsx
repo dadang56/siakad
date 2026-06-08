@@ -53,7 +53,8 @@ export default function AdminPortal({
   onEditJadwal,
   onDeleteJadwal,
   onAssignBimbingan,
-  onRemoveBimbingan
+  onRemoveBimbingan,
+  onPrintKhs
 }) {
   
   const PRODI_MAP_TO_DB = {
@@ -985,7 +986,25 @@ export default function AdminPortal({
                 <button className="btn btn-secondary btn-sm" onClick={() => alert('Fitur ekspor Excel dalam pengembangan')}>
                   Export Excel
                 </button>
-                <button className="btn btn-primary btn-sm" onClick={() => window.print()}>
+                <button className="btn btn-primary btn-sm" onClick={() => {
+                  if (!activeStudent) {
+                    alert("Silakan pilih mahasiswa terlebih dahulu.");
+                    return;
+                  }
+                  const prodiName = PRODI_MAP_FROM_DB[activeStudent.prodi_id] || '';
+                  const activeKelas = kelasList.find(c => c.id === activeStudent.kelas_id);
+                  onPrintKhs({
+                    student: activeStudent,
+                    grades: studentGrades,
+                    semester: activeKelas?.semester || 1,
+                    tahun_ajaran: settings.tahun_ajaran_aktif,
+                    totalSks,
+                    totalSksBobot,
+                    ips,
+                    prodiName,
+                    angkatan: activeKelas?.angkatan || '36'
+                  });
+                }}>
                   Cetak
                 </button>
                 <button className="btn btn-secondary btn-sm" onClick={() => alert('Mencetak seluruh KHS kelas...')}>

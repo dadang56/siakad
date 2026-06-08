@@ -66,6 +66,40 @@ export default function App() {
   
   const [activeMenu, setActiveMenu] = useState('krs');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [khsPrintData, setKhsPrintData] = useState(null);
+
+  const getBobot = (grade) => {
+    if (!grade) return 0;
+    switch (grade) {
+      case 'A': return 4.0;
+      case 'B+': return 3.5;
+      case 'B': return 3.0;
+      case 'C+': return 2.5;
+      case 'C': return 2.0;
+      case 'D': return 1.0;
+      case 'E': return 0.0;
+      default: return 0;
+    }
+  };
+
+  const handlePrintKhs = (printObj) => {
+    const KAPRODI_MAP = {
+      'D-III Nautika': { nama: 'Capt. Broto Priyono, S.SiT., M.T.', nip: '197908122008121002' },
+      'D-III Permesinan Kapal': { nama: 'Driaskoro Budi Sidharta, S.E., M.Sc.', nip: '197805132009121001' },
+      'D-III Manajemen Transportasi Perairan Daratan (MTPD)': { nama: 'Siti Nurlaili Triwahyuni, M.Sc.', nip: '198204152010122003' }
+    };
+    
+    const resolvedPrintObj = {
+      ...printObj,
+      kaprodi: KAPRODI_MAP[printObj.prodiName] || { nama: '-', nip: '-' }
+    };
+    
+    setKhsPrintData(resolvedPrintObj);
+    setTimeout(() => {
+      window.print();
+      setKhsPrintData(null);
+    }, 150);
+  };
 
   // Reset menu when switching role
   useEffect(() => {
@@ -437,20 +471,6 @@ export default function App() {
       };
     });
   }, [jadwalPembelajaranList, matakuliahList, rawUsersList]);
-
-  // Grade point mapping helper
-  const getBobot = (letter) => {
-    switch (letter) {
-      case 'A': return 4.0;
-      case 'B+': return 3.5;
-      case 'B': return 3.0;
-      case 'C+': return 2.5;
-      case 'C': return 2.0;
-      case 'D': return 1.0;
-      default: return 0.0;
-    }
-  };
-
   // 3. DATABASE TRANSACTIONS (State Updaters)
 
   // 3. DATABASE TRANSACTIONS (State Updaters & Supabase Sync)
@@ -1350,6 +1370,7 @@ export default function App() {
             settings={settings}
             onSaveKrs={handleSaveKrs}
             onPayUkt={handlePayUkt}
+            onPrintKhs={handlePrintKhs}
           />
         )}
 
@@ -1408,6 +1429,7 @@ export default function App() {
             onDeleteJadwal={handleDeleteJadwal}
             onAssignBimbingan={handleAssignBimbingan}
             onRemoveBimbingan={handleRemoveBimbingan}
+            onPrintKhs={handlePrintKhs}
           />
         )}
 
@@ -1421,6 +1443,168 @@ export default function App() {
           />
         )}
       </main>
+
+      {/* Printable KHS Document (Hidden on screen, visible during print) */}
+      {khsPrintData && (
+        <div className="print-only-khs-document">
+          {/* Header block with Logo and Campus details */}
+          <div className="print-khs-header">
+            {settings.logo_url ? (
+              <img src={settings.logo_url} className="print-khs-logo" alt="Logo Kampus" />
+            ) : (
+              <div className="print-khs-logo-placeholder">S</div>
+            )}
+            <div className="print-khs-header-text">
+              <h2 className="print-univ-name">{(settings.nama_kampus?.toUpperCase() || 'POLITEKNIK TRANSPORTASI SDP PALEMBANG')}</h2>
+              <p className="print-univ-info">{settings.alamat_kampus || 'Jl. Residen Abdul Rozak, Palembang'}</p>
+              <p className="print-univ-info">Telp: {settings.telepon_kampus || '(0711) 712345'} | Email: {settings.email_kampus || 'info@poltektrans.ac.id'}</p>
+            </div>
+          </div>
+          <div className="print-khs-divider" style={{ borderBottom: '3px double #000', marginBottom: '15px' }} />
+          
+          <h3 className="print-document-title">KARTU HASIL STUDI (KHS)</h3>
+          
+          {/* Student details grid */}
+          <div className="print-student-info-grid">
+            <div className="print-info-left">
+              <table className="info-sub-table">
+                <tbody>
+                  <tr>
+                    <td>TAHUN AKADEMIK</td>
+                    <td>: {khsPrintData.tahun_ajaran || settings.tahun_ajaran_aktif}</td>
+                  </tr>
+                  <tr>
+                    <td>NAMA TARUNA</td>
+                    <td>: {khsPrintData.student.nama?.toUpperCase()}</td>
+                  </tr>
+                  <tr>
+                    <td>NOMOR TARUNA</td>
+                    <td>: {khsPrintData.student.nim_nip}</td>
+                  </tr>
+                  <tr>
+                    <td>ANGKATAN</td>
+                    <td>: Angkatan {khsPrintData.angkatan || '36'}</td>
+                  </tr>
+                  <tr>
+                    <td>TINGKAT/SEMESTER</td>
+                    <td>: Semester {khsPrintData.semester}</td>
+                  </tr>
+                  <tr>
+                    <td>PROGRAM STUDI</td>
+                    <td>: {khsPrintData.prodiName?.toUpperCase()}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <div className="print-info-right">
+              <div className="catatan-box">
+                <strong>Catatan:</strong>
+                <div>Lembar 1 : Taruna Ybs</div>
+                <div>Lembar 2 : Orang Tua Taruna Ybs</div>
+                <div>Lembar 3 : {khsPrintData.prodiName?.toUpperCase()}</div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Grades Table */}
+          <table className="print-grades-table">
+            <thead>
+              <tr>
+                <th style={{ width: '40px' }}>No</th>
+                <th>MATA KULIAH</th>
+                <th style={{ width: '80px' }}>BOBOT SKS</th>
+                <th style={{ width: '100px' }}>NILAI ANGKA</th>
+                <th style={{ width: '80px' }}>HURUF</th>
+                <th style={{ width: '100px' }}>BOBOT x ANGKA</th>
+                <th style={{ width: '150px' }}>PREDIKAT</th>
+              </tr>
+            </thead>
+            <tbody>
+              {khsPrintData.grades.map((g, idx) => {
+                const bobotVal = getBobot(g.nilai_huruf);
+                const bobotSksVal = g.sks * bobotVal;
+                let predikat = 'Cukup';
+                if (g.nilai_huruf === 'A') predikat = 'Dengan Pujian';
+                else if (g.nilai_huruf?.startsWith('B')) predikat = 'Sangat Memuaskan';
+                else if (g.nilai_huruf?.startsWith('C')) predikat = 'Memuaskan';
+                else if (g.nilai_huruf === 'D') predikat = 'Kurang';
+                else if (g.nilai_huruf === 'E') predikat = 'Gagal';
+                return (
+                  <tr key={idx}>
+                    <td style={{ textAlign: 'center' }}>{idx + 1}</td>
+                    <td>{g.nama_mk}</td>
+                    <td style={{ textAlign: 'center' }}>{g.sks}</td>
+                    <td style={{ textAlign: 'center' }}>{g.nilai_akhir?.toFixed(1) || '-'}</td>
+                    <td style={{ textAlign: 'center' }}>{g.nilai_huruf}</td>
+                    <td style={{ textAlign: 'center' }}>{bobotSksVal.toFixed(2)}</td>
+                    <td style={{ textAlign: 'center' }}>{predikat}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            <tfoot>
+              <tr style={{ fontWeight: 'bold' }}>
+                <td colSpan="2" style={{ textAlign: 'right' }}>Jumlah</td>
+                <td style={{ textAlign: 'center' }}>{khsPrintData.totalSks}</td>
+                <td colSpan="2"></td>
+                <td style={{ textAlign: 'center' }}>{khsPrintData.totalSksBobot?.toFixed(2)}</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+          
+          {/* Academic Indices & Signatures */}
+          <div className="print-footer-grid">
+            <div className="print-indices-left">
+              <table className="print-indices-table">
+                <tbody>
+                  <tr>
+                    <td>INDEKS PRESTASI SEMESTER (IPS)</td>
+                    <td>: {khsPrintData.ips?.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td>NILAI KONDITE (NK)</td>
+                    <td>: 85.00</td>
+                  </tr>
+                  <tr>
+                    <td>NILAI KESAMAPTAAN (NS)</td>
+                    <td>: 80.00</td>
+                  </tr>
+                  <tr>
+                    <td>PERINGKAT AKHIR SEMESTER (PAS)</td>
+                    <td>: 0.00</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <div className="print-signatures-right">
+              <div className="print-date">Palembang, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+              
+              <div className="signatures-row">
+                <div className="sig-left">
+                  <div>Mengetahui,</div>
+                  <div style={{ fontWeight: 'bold' }}>KEPALA BAGIAN ADMINISTRASI AKADEMIK</div>
+                  <div style={{ fontWeight: 'bold', marginBottom: '12px' }}>DAN KETARUNAAN</div>
+                  <div className="sig-space" />
+                  <div className="sig-name"><u>Kodrat Alam, S.SiT., MT.</u></div>
+                  <div>NIP. 197806292000031001</div>
+                </div>
+                
+                <div className="sig-right">
+                  <div style={{ visibility: 'hidden' }}>.</div>
+                  <div style={{ fontWeight: 'bold' }}>KETUA PROGRAM STUDI</div>
+                  <div style={{ fontWeight: 'bold', marginBottom: '12px' }}>{khsPrintData.prodiName?.toUpperCase()}</div>
+                  <div className="sig-space" />
+                  <div className="sig-name"><u>{khsPrintData.kaprodi?.nama || '-'}</u></div>
+                  <div>NIP. {khsPrintData.kaprodi?.nip || '-'}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

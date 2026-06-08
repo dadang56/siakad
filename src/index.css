@@ -1167,3 +1167,240 @@ h1, h2, h3, h4, h5, h6 {
     display: none !important;
   }
 }
+
+/* Print Stylesheet */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  .app-container,
+  .app-sidebar,
+  .app-content,
+  .role-switcher-bar,
+  .modal-overlay,
+  .glass-card,
+  header,
+  footer,
+  aside,
+  main,
+  button,
+  .tabs-container {
+    display: none !important;
+  }
+  
+  .print-only-khs-document {
+    display: block !important;
+    background: white !important;
+    color: black !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    font-family: 'Times New Roman', Times, serif !important;
+  }
+  
+  /* Make sure all backgrounds are white and text is black */
+  * {
+    background: transparent !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+}
+
+/* Screen Stylesheet (Hidden on screen) */
+.print-only-khs-document {
+  display: none;
+}
+
+/* Print Document Styling */
+.print-khs-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.print-khs-logo {
+  height: 80px;
+  width: auto;
+  object-fit: contain;
+}
+
+.print-khs-logo-placeholder {
+  width: 80px;
+  height: 80px;
+  border: 1px solid #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 24px;
+}
+
+.print-khs-header-text {
+  flex: 1;
+  text-align: center;
+}
+
+.print-univ-name {
+  font-size: 14pt;
+  font-weight: bold;
+  margin: 0 0 4px 0;
+  font-family: 'Times New Roman', Times, serif;
+}
+
+.print-univ-info {
+  font-size: 9pt;
+  margin: 0 0 2px 0;
+  font-family: 'Times New Roman', Times, serif;
+}
+
+.print-document-title {
+  text-align: center;
+  font-size: 13pt;
+  font-weight: bold;
+  text-decoration: underline;
+  margin-bottom: 20px;
+  font-family: 'Times New Roman', Times, serif;
+}
+
+.print-student-info-grid {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  font-size: 10pt;
+  font-family: 'Times New Roman', Times, serif;
+}
+
+.print-info-left {
+  flex: 1;
+}
+
+.print-info-right {
+  width: 250px;
+}
+
+.info-sub-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.info-sub-table td {
+  padding: 3px 6px;
+  border: none !important;
+  font-family: 'Times New Roman', Times, serif;
+}
+
+.info-sub-table td:first-child {
+  width: 150px;
+  font-weight: 500;
+}
+
+.catatan-box {
+  border: 1px solid #000;
+  padding: 8px 12px;
+  font-size: 8pt;
+  line-height: 1.4;
+  font-family: 'Times New Roman', Times, serif;
+}
+
+/* Grades Table Print */
+.print-grades-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  font-size: 10pt;
+  font-family: 'Times New Roman', Times, serif;
+}
+
+.print-grades-table th,
+.print-grades-table td {
+  border: 1px solid #000 !important;
+  padding: 6px 8px;
+}
+
+.print-grades-table th {
+  background-color: #f3f4f6 !important;
+  font-weight: bold;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.print-grades-table tfoot tr td {
+  border-top: 2px double #000 !important;
+}
+
+/* Print Indices Table */
+.print-footer-grid {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-top: 25px;
+  font-size: 10pt;
+  font-family: 'Times New Roman', Times, serif;
+}
+
+.print-indices-left {
+  flex: 1;
+}
+
+.print-indices-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.print-indices-table td {
+  padding: 4px 6px;
+  border: none !important;
+  font-family: 'Times New Roman', Times, serif;
+}
+
+.print-indices-table td:first-child {
+  width: 260px;
+  font-weight: 500;
+}
+
+.print-signatures-right {
+  width: 500px;
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.print-date {
+  margin-bottom: 15px;
+  font-family: 'Times New Roman', Times, serif;
+}
+
+.signatures-row {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.sig-left, .sig-right {
+  width: 48%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'Times New Roman', Times, serif;
+}
+
+.sig-space {
+  height: 65px;
+}
+
+.sig-name {
+  font-weight: bold;
+  margin-bottom: 2px;
+}
