@@ -936,8 +936,12 @@ export default function App() {
   // === Unified User CRUD (Supabase Sync) ===
   const handleAddUser = async (user) => {
     try {
+      const fallbackNimNip = user.nim_nip && user.nim_nip.trim() !== '' 
+        ? user.nim_nip.trim() 
+        : (user.username ? user.username.trim() : 'temp_' + Date.now());
+
       const { error } = await supabase.from('users').insert([{
-        nim_nip: user.nim_nip ? user.nim_nip.trim() : null,
+        nim_nip: fallbackNimNip,
         username: user.username ? user.username.trim() : null,
         nama: user.nama,
         email: user.email || null,
@@ -959,8 +963,12 @@ export default function App() {
 
   const handleEditUser = async (user) => {
     try {
+      const fallbackNimNip = user.nim_nip && user.nim_nip.trim() !== '' 
+        ? user.nim_nip.trim() 
+        : (user.username ? user.username.trim() : 'temp_' + Date.now());
+
       const { error } = await supabase.from('users').update({
-        nim_nip: user.nim_nip ? user.nim_nip.trim() : null,
+        nim_nip: fallbackNimNip,
         username: user.username ? user.username.trim() : null,
         nama: user.nama,
         email: user.email || null,

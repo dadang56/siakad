@@ -1850,16 +1850,18 @@ export default function AdminPortal({
                   />
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label">Nomor Induk (NIM/NIP) (Opsional):</label>
-                  <input 
-                    type="text" 
-                    value={targetUser.nim_nip}
-                    onChange={(e) => setTargetUser({ ...targetUser, nim_nip: e.target.value })}
-                    className="form-control"
-                    disabled={modalType === 'edit'}
-                  />
-                </div>
+                {targetUser.role !== 'keuangan' && (
+                  <div className="form-group">
+                    <label className="form-label">Nomor Induk (NIM/NIP) (Opsional):</label>
+                    <input 
+                      type="text" 
+                      value={targetUser.nim_nip}
+                      onChange={(e) => setTargetUser({ ...targetUser, nim_nip: e.target.value })}
+                      className="form-control"
+                      disabled={modalType === 'edit'}
+                    />
+                  </div>
+                )}
 
                 <div className="form-group">
                   <label className="form-label">Nama Lengkap:</label>
@@ -1902,20 +1904,22 @@ export default function AdminPortal({
                   </select>
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label">Program Studi:</label>
-                  <select 
-                    value={targetUser.prodi_id}
-                    onChange={(e) => setTargetUser({ ...targetUser, prodi_id: e.target.value })}
-                    className="form-control"
-                    disabled={currentRole === 'admin_prodi'}
-                  >
-                    <option value="">-- Tidak Ada Prodi / Non-Akademik --</option>
-                    <option value="ffe7ed2a-97b6-458b-9fc7-4d9b62e04efb">D-III Nautika</option>
-                    <option value="39ae54ce-9e86-4b99-943e-53437403e32d">D-III Permesinan Kapal</option>
-                    <option value="2df63354-d49e-4f31-88aa-513509e22954">D-III Manajemen Transportasi Perairan Daratan (MTPD)</option>
-                  </select>
-                </div>
+                {targetUser.role !== 'keuangan' && (
+                  <div className="form-group">
+                    <label className="form-label">Program Studi:</label>
+                    <select 
+                      value={targetUser.prodi_id}
+                      onChange={(e) => setTargetUser({ ...targetUser, prodi_id: e.target.value })}
+                      className="form-control"
+                      disabled={currentRole === 'admin_prodi'}
+                    >
+                      <option value="">-- Tidak Ada Prodi / Non-Akademik --</option>
+                      <option value="ffe7ed2a-97b6-458b-9fc7-4d9b62e04efb">D-III Nautika</option>
+                      <option value="39ae54ce-9e86-4b99-943e-53437403e32d">D-III Permesinan Kapal</option>
+                      <option value="2df63354-d49e-4f31-88aa-513509e22954">D-III Manajemen Transportasi Perairan Daratan (MTPD)</option>
+                    </select>
+                  </div>
+                )}
 
                 {targetUser.role === 'mahasiswa' && (
                   <div className="form-group">
@@ -1936,25 +1940,29 @@ export default function AdminPortal({
                   </div>
                 )}
 
-                <div className="form-group">
-                  <label className="form-label">Email (Opsional):</label>
-                  <input 
-                    type="email" 
-                    value={targetUser.email}
-                    onChange={(e) => setTargetUser({ ...targetUser, email: e.target.value })}
-                    className="form-control"
-                  />
-                </div>
+                {targetUser.role !== 'keuangan' && (
+                  <>
+                    <div className="form-group">
+                      <label className="form-label">Email (Opsional):</label>
+                      <input 
+                        type="email" 
+                        value={targetUser.email}
+                        onChange={(e) => setTargetUser({ ...targetUser, email: e.target.value })}
+                        className="form-control"
+                      />
+                    </div>
 
-                <div className="form-group">
-                  <label className="form-label">No. Telepon / HP (Opsional):</label>
-                  <input 
-                    type="text" 
-                    value={targetUser.no_hp}
-                    onChange={(e) => setTargetUser({ ...targetUser, no_hp: e.target.value })}
-                    className="form-control"
-                  />
-                </div>
+                    <div className="form-group">
+                      <label className="form-label">No. Telepon / HP (Opsional):</label>
+                      <input 
+                        type="text" 
+                        value={targetUser.no_hp}
+                        onChange={(e) => setTargetUser({ ...targetUser, no_hp: e.target.value })}
+                        className="form-control"
+                      />
+                    </div>
+                  </>
+                )}
 
                 <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
                   <input 
