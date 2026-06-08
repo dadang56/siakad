@@ -1552,7 +1552,7 @@ export default function App() {
         </table>
         
         {/* Footer Section (Indices & Signatures) */}
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '55px' }}>
           <tbody>
             <tr>
               {/* Indices Box */}
@@ -1585,7 +1585,7 @@ export default function App() {
                 </div>
               </td>
               {/* Spacer */}
-              <td style={{ width: '30px' }}></td>
+              <td style={{ width: '40px' }}></td>
               {/* Signatures */}
               <td style={{ verticalAlign: 'top' }}>
                 <div style={{ textAlign: 'right', marginBottom: '10px', fontSize: '9.5pt', paddingRight: '40px' }}>
@@ -1593,21 +1593,27 @@ export default function App() {
                 </div>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9.5pt' }}>
                   <tbody>
+                    {/* Row 1: Signatures Titles */}
                     <tr>
                       <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'top', lineHeight: '1.2' }}>
                         <div>Mengetahui,</div>
                         <div>KEPALA BAGIAN ADMINISTRASI</div>
                         <div>AKADEMIK</div>
-                        <div style={{ marginBottom: '5px' }}>DAN KETARUNAAN</div>
-                        <div style={{ height: '65px' }}></div>
-                        <div><u><strong>{settings?.pejabat_akademik || 'Kodrat Alam, S.SiT., MT.'}</strong></u></div>
-                        <div>NIP. {settings?.nip_pejabat_akademik || '197806292000031001'}</div>
+                        <div>DAN KETARUNAAN</div>
                       </td>
                       <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'top', lineHeight: '1.2' }}>
                         <div>&nbsp;</div>
                         <div>KETUA PROGRAM STUDI</div>
-                        <div style={{ marginBottom: '5px' }}>{prodiNameCleaned}</div>
-                        <div style={{ height: '65px' }}></div>
+                        <div>{prodiNameCleaned}</div>
+                      </td>
+                    </tr>
+                    {/* Row 2: Signatures Names & NIPs (Perfect Baseline Alignment) */}
+                    <tr>
+                      <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'top', paddingTop: '55px', lineHeight: '1.2' }}>
+                        <div><u><strong>{settings?.pejabat_akademik || 'Kodrat Alam, S.SiT., MT.'}</strong></u></div>
+                        <div>NIP. {settings?.nip_pejabat_akademik || '197806292000031001'}</div>
+                      </td>
+                      <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'top', paddingTop: '55px', lineHeight: '1.2' }}>
                         <div><u><strong>{kaprodi.nama}</strong></u></div>
                         <div>NIP. {kaprodi.nip}</div>
                       </td>
