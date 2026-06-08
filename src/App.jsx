@@ -1387,9 +1387,7 @@ export default function App() {
     const formattedDate = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 
     return (
-      <div style={{
-        fontFamily: "'Times New Roman', Times, serif",
-        color: '#000',
+      <div className="print-page-content" style={{
         backgroundColor: '#fff',
         padding: '20px',
         fontSize: '10pt',
@@ -1408,222 +1406,109 @@ export default function App() {
               color: black !important;
             }
           }
-          .header-container {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            margin-bottom: 10px;
-          }
-          .header-logo {
-            flex-shrink: 0;
-          }
-          .header-logo img {
-            height: 80px;
-            width: auto;
-            object-fit: contain;
-          }
-          .header-text {
-            flex-grow: 1;
-            text-align: center;
-          }
-          .univ-name {
-            font-size: 13pt;
-            font-weight: bold;
-            margin: 0 0 4px 0;
-          }
-          .univ-info {
-            font-size: 8.5pt;
-            margin: 0 0 2px 0;
-          }
-          .double-line {
-            border-top: 3px double #000;
-            margin-bottom: 15px;
-          }
-          .doc-title {
-            text-align: center;
-            font-size: 12pt;
-            font-weight: bold;
-            text-decoration: underline;
-            margin-bottom: 15px;
-            letter-spacing: 0.5px;
-          }
-          .info-grid {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 15px;
-          }
-          .info-left {
-            flex: 1;
-          }
-          .info-right {
-            width: 240px;
-            flex-shrink: 0;
-          }
-          .info-table {
-            border-collapse: collapse;
-            width: 100%;
-          }
-          .info-table td {
-            padding: 2px 4px;
-            font-size: 9.5pt;
-            vertical-align: top;
-          }
-          .info-table td.label {
-            width: 150px;
-            font-weight: 500;
-          }
-          .catatan-box {
-            border: 1px solid #000;
-            padding: 6px 10px;
-            font-size: 8pt;
-          }
-          .catatan-title {
-            font-weight: bold;
-            margin-bottom: 2px;
-          }
-          .grades-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 15px;
-            font-size: 9.5pt;
-          }
-          .grades-table th {
-            border: 1px solid #000;
-            padding: 6px 4px;
-            font-weight: bold;
-            text-align: center;
-            font-size: 9pt;
-          }
-          .grades-table td {
-            border: 1px solid #000;
-            padding: 5px 6px;
-          }
-          .grades-table tfoot td {
-            font-weight: bold;
-            border-top: 2px double #000 !important;
-          }
-          .footer-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-top: 15px;
-          }
-          .indices-box {
-            border: 1px solid #000;
-            padding: 6px 10px;
-            width: 260px;
-            font-size: 9pt;
-          }
-          .indices-table {
-            width: 100%;
-            border-collapse: collapse;
-          }
-          .indices-table td {
-            padding: 2px 0;
-          }
-          .indices-table td.label {
-            width: 190px;
-          }
-          .signatures-box {
-            width: 500px;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            font-size: 9.5pt;
-          }
-          .date-row {
-            margin-bottom: 10px;
-            padding-right: 40px;
-          }
-          .sigs-row {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-          }
-          .sig-col {
-            width: 48%;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-          }
-          .sig-space {
-            height: 55px;
-          }
-          .sig-name {
-            font-weight: bold;
+          .print-page-content, .print-page-content * {
+            font-family: 'Times New Roman', Times, serif !important;
+            color: #000000 !important;
           }
         `}} />
 
-        <div className="header-container">
-          <div className="header-logo">
-            {settings?.logo_url ? (
-              <img src={settings.logo_url} alt="Logo" />
-            ) : (
-              <div style={{ width: '80px', height: '80px', border: '1px solid #000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '24px' }}>S</div>
-            )}
-          </div>
-          <div className="header-text">
-            <h2 className="univ-name">{settings?.nama_kampus?.toUpperCase() || 'POLITEKNIK TRANSPORTASI SUNGAI, DANAU DAN PENYEBERANGAN PALEMBANG'}</h2>
-            <p className="univ-info">{settings?.alamat_kampus || 'Jl. Sabar Jaya No 116, Mariana, Kec. Banyuasin I, Kab. Banyuasin, Sumatera Selatan 30962'}</p>
-            <p className="univ-info">Telp: {settings?.telepon_kampus || '(0711) 712345'} | Email: {settings?.email_kampus || 'info@poltektrans.ac.id'}</p>
-          </div>
-        </div>
-        <div className="double-line"></div>
+        {/* Header KOP Surat */}
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '5px' }}>
+          <tbody>
+            <tr>
+              <td style={{ width: '90px', verticalAlign: 'middle', textAlign: 'left' }}>
+                {settings?.logo_url ? (
+                  <img src={settings.logo_url} alt="Logo" style={{ height: '75px', width: 'auto', display: 'block' }} />
+                ) : (
+                  <div style={{ width: '75px', height: '75px', border: '1px solid #000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '24px' }}>S</div>
+                )}
+              </td>
+              <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                <h2 style={{ fontSize: '13pt', fontWeight: 'bold', margin: '0 0 4px 0', lineHeight: '1.2' }}>
+                  POLITEKNIK TRANSPORTASI SUNGAI, DANAU DAN<br />
+                  PENYEBERANGAN PALEMBANG
+                </h2>
+                <p style={{ fontSize: '8.5pt', margin: '0 0 2px 0', lineHeight: '1.2' }}>
+                  {settings?.alamat_kampus || 'Jl. Sabar Jaya No 116, Mariana, Kec. Banyuasin I, Kab. Banyuasin, Sumatera Selatan 30962'}
+                </p>
+                <p style={{ fontSize: '8.5pt', margin: 0, lineHeight: '1.2' }}>
+                  Telp: {settings?.telepon_kampus || '(0711) 712345'} | Email: {settings?.email_kampus || 'info@poltektrans.ac.id'}
+                </p>
+              </td>
+              <td style={{ width: '90px' }}></td> {/* Balancer cell to keep text perfectly centered */}
+            </tr>
+          </tbody>
+        </table>
+        <div style={{ borderTop: '3px double #000', margin: '5px 0 15px 0' }}></div>
         
-        <h3 className="doc-title">KARTU HASIL STUDI (KHS)</h3>
+        {/* Document Title */}
+        <h3 style={{ textAlign: 'center', fontSize: '11.5pt', fontWeight: 'bold', textDecoration: 'underline', margin: '0 0 15px 0', letterSpacing: '0.5px' }}>
+          KARTU HASIL STUDI (KHS)
+        </h3>
         
-        <div className="info-grid">
-          <div className="info-left">
-            <table className="info-table">
-              <tbody>
-                <tr>
-                  <td className="label">TAHUN AKADEMIK</td>
-                  <td>: {tahunAjaran}</td>
-                </tr>
-                <tr>
-                  <td className="label">NAMA TARUNA</td>
-                  <td>: {studentName}</td>
-                </tr>
-                <tr>
-                  <td className="label">NOMOR TARUNA</td>
-                  <td>: {studentNim}</td>
-                </tr>
-                <tr>
-                  <td className="label">ANGKATAN</td>
-                  <td>: Angkatan {angkatan}</td>
-                </tr>
-                <tr>
-                  <td className="label">TINGKAT/SEMESTER</td>
-                  <td>: Semester {semester}</td>
-                </tr>
-                <tr>
-                  <td className="label">PROGRAM STUDI</td>
-                  <td>: {prodiNameCleaned}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div className="info-right">
-            <div className="catatan-box">
-              <div className="catatan-title">Catatan:</div>
-              <div>Lembar 1 : Taruna Ybs</div>
-              <div>Lembar 2 : Orang Tua Taruna Ybs</div>
-              <div>Lembar 3 : {prodiNameCleaned}</div>
-            </div>
-          </div>
-        </div>
+        {/* Info Grid (Student Details & Catatan Box) */}
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px' }}>
+          <tbody>
+            <tr>
+              <td style={{ verticalAlign: 'top' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <tbody>
+                    <tr>
+                      <td style={{ width: '150px', padding: '2px 0', fontSize: '9.5pt' }}>TAHUN AKADEMIK</td>
+                      <td style={{ width: '15px', padding: '2px 0', fontSize: '9.5pt' }}>:</td>
+                      <td style={{ padding: '2px 0', fontSize: '9.5pt' }}>{tahunAjaran}</td>
+                    </tr>
+                    <tr>
+                      <td style={{ padding: '2px 0', fontSize: '9.5pt' }}>NAMA TARUNA</td>
+                      <td style={{ padding: '2px 0', fontSize: '9.5pt' }}>:</td>
+                      <td style={{ padding: '2px 0', fontSize: '9.5pt' }}>{studentName}</td>
+                    </tr>
+                    <tr>
+                      <td style={{ padding: '2px 0', fontSize: '9.5pt' }}>NOMOR TARUNA</td>
+                      <td style={{ padding: '2px 0', fontSize: '9.5pt' }}>:</td>
+                      <td style={{ padding: '2px 0', fontSize: '9.5pt' }}>{studentNim}</td>
+                    </tr>
+                    <tr>
+                      <td style={{ padding: '2px 0', fontSize: '9.5pt' }}>ANGKATAN</td>
+                      <td style={{ padding: '2px 0', fontSize: '9.5pt' }}>:</td>
+                      <td style={{ padding: '2px 0', fontSize: '9.5pt' }}>Angkatan {angkatan}</td>
+                    </tr>
+                    <tr>
+                      <td style={{ padding: '2px 0', fontSize: '9.5pt' }}>TINGKAT/SEMESTER</td>
+                      <td style={{ padding: '2px 0', fontSize: '9.5pt' }}>:</td>
+                      <td style={{ padding: '2px 0', fontSize: '9.5pt' }}>Semester {semester}</td>
+                    </tr>
+                    <tr>
+                      <td style={{ padding: '2px 0', fontSize: '9.5pt' }}>PROGRAM STUDI</td>
+                      <td style={{ padding: '2px 0', fontSize: '9.5pt' }}>:</td>
+                      <td style={{ padding: '2px 0', fontSize: '9.5pt' }}>{prodiNameCleaned}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+              <td style={{ width: '240px', verticalAlign: 'top', paddingLeft: '20px' }}>
+                <div style={{ border: '1px solid #000', padding: '6px 10px', fontSize: '8.5pt', lineHeight: '1.4' }}>
+                  <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>Catatan:</div>
+                  <div>Lembar 1 : Taruna Ybs</div>
+                  <div>Lembar 2 : Orang Tua Taruna Ybs</div>
+                  <div>Lembar 3 : {prodiNameCleaned}</div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
         
-        <table className="grades-table">
+        {/* Grades Table */}
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px', fontSize: '9.5pt' }}>
           <thead>
             <tr>
-              <th style={{ width: '35px', textAlign: 'center' }}>No</th>
-              <th style={{ textAlign: 'left' }}>MATA KULIAH</th>
-              <th style={{ width: '75px', textAlign: 'center' }}>BOBOT<br/>SKS</th>
-              <th style={{ width: '80px', textAlign: 'center' }}>NILAI<br/>ANGKA</th>
-              <th style={{ width: '65px', textAlign: 'center' }}>HURUF</th>
-              <th style={{ width: '100px', textAlign: 'center' }}>BOBOT<br/>x<br/>ANGKA</th>
-              <th style={{ width: '120px', textAlign: 'center' }}>PREDIKAT</th>
+              <th style={{ border: '1px solid #000', padding: '5px', width: '35px', textAlign: 'center', fontWeight: 'bold' }}>No</th>
+              <th style={{ border: '1px solid #000', padding: '5px', textAlign: 'center', fontWeight: 'bold' }}>MATA KULIAH</th>
+              <th style={{ border: '1px solid #000', padding: '5px', width: '80px', textAlign: 'center', fontWeight: 'bold' }}>BOBOT<br/>SKS</th>
+              <th style={{ border: '1px solid #000', padding: '5px', width: '85px', textAlign: 'center', fontWeight: 'bold' }}>NILAI<br/>ANGKA</th>
+              <th style={{ border: '1px solid #000', padding: '5px', width: '70px', textAlign: 'center', fontWeight: 'bold' }}>HURUF</th>
+              <th style={{ border: '1px solid #000', padding: '5px', width: '100px', textAlign: 'center', fontWeight: 'bold' }}>BOBOT<br/>x<br/>ANGKA</th>
+              <th style={{ border: '1px solid #000', padding: '5px', width: '110px', textAlign: 'center', fontWeight: 'bold' }}>PREDIKAT</th>
             </tr>
           </thead>
           <tbody>
@@ -1643,13 +1528,13 @@ export default function App() {
                 else if (g.nilai_huruf === 'E') predikat = 'Gagal';
                 return (
                   <tr key={idx}>
-                    <td style={{ textAlign: 'center' }}>{idx + 1}</td>
-                    <td>{g.nama_mk}</td>
-                    <td style={{ textAlign: 'center' }}>{Number(g.sks) || 0}</td>
-                    <td style={{ textAlign: 'center' }}>{g.nilai_akhir !== null && g.nilai_akhir !== undefined ? Number(g.nilai_akhir).toFixed(1) : '-'}</td>
-                    <td style={{ textAlign: 'center' }}>{g.nilai_huruf || '-'}</td>
-                    <td style={{ textAlign: 'center' }}>{Number(bobotSksVal).toFixed(2)}</td>
-                    <td style={{ textAlign: 'center' }}>{predikat}</td>
+                    <td style={{ border: '1px solid #000', padding: '5px', textAlign: 'center' }}>{idx + 1}</td>
+                    <td style={{ border: '1px solid #000', padding: '5px 8px', textAlign: 'left' }}>{g.nama_mk}</td>
+                    <td style={{ border: '1px solid #000', padding: '5px', textAlign: 'center' }}>{Number(g.sks) || 0}</td>
+                    <td style={{ border: '1px solid #000', padding: '5px', textAlign: 'center' }}>{g.nilai_akhir !== null && g.nilai_akhir !== undefined ? Number(g.nilai_akhir).toFixed(1) : '-'}</td>
+                    <td style={{ border: '1px solid #000', padding: '5px', textAlign: 'center' }}>{g.nilai_huruf || '-'}</td>
+                    <td style={{ border: '1px solid #000', padding: '5px', textAlign: 'center' }}>{Number(bobotSksVal).toFixed(2)}</td>
+                    <td style={{ border: '1px solid #000', padding: '5px', textAlign: 'center' }}>{predikat}</td>
                   </tr>
                 );
               })
@@ -1657,62 +1542,82 @@ export default function App() {
           </tbody>
           <tfoot>
             <tr>
-              <td colSpan="2" style={{ textAlign: 'right', fontWeight: 'bold', paddingRight: '15px' }}>Jumlah</td>
-              <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{totalSks}</td>
-              <td colSpan="2"></td>
-              <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{totalSksBobot.toFixed(2)}</td>
-              <td></td>
+              <td colSpan="2" style={{ border: '1px solid #000', borderTop: '2px double #000', padding: '5px', textAlign: 'center', fontWeight: 'bold' }}>Jumlah</td>
+              <td style={{ border: '1px solid #000', borderTop: '2px double #000', padding: '5px', textAlign: 'center', fontWeight: 'bold' }}>{totalSks}</td>
+              <td colSpan="2" style={{ border: '1px solid #000', borderTop: '2px double #000', padding: '5px' }}></td>
+              <td style={{ border: '1px solid #000', borderTop: '2px double #000', padding: '5px', textAlign: 'center', fontWeight: 'bold' }}>{totalSksBobot.toFixed(2)}</td>
+              <td style={{ border: '1px solid #000', borderTop: '2px double #000', padding: '5px' }}></td>
             </tr>
           </tfoot>
         </table>
         
-        <div className="footer-container">
-          <div className="indices-box">
-            <table className="indices-table">
-              <tbody>
-                <tr>
-                  <td className="label">INDEKS PRESTASI SEMESTER (IPS)</td>
-                  <td>: {ips.toFixed(2)}</td>
-                </tr>
-                <tr>
-                  <td className="label">NILAI KONDITE (NK)</td>
-                  <td>: 0.00</td>
-                </tr>
-                <tr>
-                  <td className="label">NILAI KESAMAPTAAN (NS)</td>
-                  <td>: 0.00</td>
-                </tr>
-                <tr>
-                  <td className="label">PERINGKAT AKHIR SEMESTER (PAS)</td>
-                  <td>: 0.00</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          
-          <div className="signatures-box">
-            <div className="date-row">Palembang, {formattedDate}</div>
-            <div className="sigs-row">
-              <div className="sig-col">
-                <div>Mengetahui,</div>
-                <div style={{ fontWeight: 'bold', fontSize: '8.5pt' }}>KEPALA BAGIAN ADMINISTRASI</div>
-                <div style={{ fontWeight: 'bold', fontSize: '8.5pt', marginBottom: '5px' }}>AKADEMIK DAN KETARUNAAN</div>
-                <div className="sig-space"></div>
-                <div className="sig-name"><u>{settings?.pejabat_akademik || 'Kodrat Alam, S.SiT., MT.'}</u></div>
-                <div>NIP. {settings?.nip_pejabat_akademik || '197806292000031001'}</div>
-              </div>
-              
-              <div className="sig-col">
-                <div>&nbsp;</div>
-                <div style={{ fontWeight: 'bold', fontSize: '8.5pt' }}>KETUA PROGRAM STUDI</div>
-                <div style={{ fontWeight: 'bold', fontSize: '8.5pt', marginBottom: '5px' }}>{prodiNameCleaned}</div>
-                <div className="sig-space"></div>
-                <div className="sig-name"><u>{kaprodi.nama}</u></div>
-                <div>NIP. {kaprodi.nip}</div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Footer Section (Indices & Signatures) */}
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
+          <tbody>
+            <tr>
+              {/* Indices Box */}
+              <td style={{ width: '270px', verticalAlign: 'top' }}>
+                <div style={{ border: '1px solid #000', padding: '6px 10px', fontSize: '9pt' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <tbody>
+                      <tr>
+                        <td style={{ padding: '2px 0', fontWeight: 'bold', fontSize: '8.5pt' }}>INDEKS PRESTASI SEMESTER (IPS)</td>
+                        <td style={{ width: '15px', textAlign: 'center' }}>:</td>
+                        <td style={{ padding: '2px 0', width: '45px', textAlign: 'right', fontWeight: 'bold', fontSize: '8.5pt' }}>{ips.toFixed(2)}</td>
+                      </tr>
+                      <tr>
+                        <td style={{ padding: '2px 0', fontSize: '8.5pt' }}>NILAI KONDITE (NK)</td>
+                        <td style={{ textAlign: 'center' }}>:</td>
+                        <td style={{ padding: '2px 0', textAlign: 'right', fontSize: '8.5pt' }}>0.00</td>
+                      </tr>
+                      <tr>
+                        <td style={{ padding: '2px 0', fontSize: '8.5pt' }}>NILAI KESAMAPTAAN (NS)</td>
+                        <td style={{ textAlign: 'center' }}>:</td>
+                        <td style={{ padding: '2px 0', textAlign: 'right', fontSize: '8.5pt' }}>0.00</td>
+                      </tr>
+                      <tr>
+                        <td style={{ padding: '2px 0', fontSize: '8.5pt' }}>PERINGKAT AKHIR SEMESTER (PAS)</td>
+                        <td style={{ textAlign: 'center' }}>:</td>
+                        <td style={{ padding: '2px 0', textAlign: 'right', fontSize: '8.5pt' }}>0.00</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </td>
+              {/* Spacer */}
+              <td style={{ width: '30px' }}></td>
+              {/* Signatures */}
+              <td style={{ verticalAlign: 'top' }}>
+                <div style={{ textAlign: 'right', marginBottom: '10px', fontSize: '9.5pt', paddingRight: '40px' }}>
+                  Palembang, {formattedDate}
+                </div>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9.5pt' }}>
+                  <tbody>
+                    <tr>
+                      <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'top', lineHeight: '1.2' }}>
+                        <div>Mengetahui,</div>
+                        <div>KEPALA BAGIAN ADMINISTRASI</div>
+                        <div>AKADEMIK</div>
+                        <div style={{ marginBottom: '5px' }}>DAN KETARUNAAN</div>
+                        <div style={{ height: '65px' }}></div>
+                        <div><u><strong>{settings?.pejabat_akademik || 'Kodrat Alam, S.SiT., MT.'}</strong></u></div>
+                        <div>NIP. {settings?.nip_pejabat_akademik || '197806292000031001'}</div>
+                      </td>
+                      <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'top', lineHeight: '1.2' }}>
+                        <div>&nbsp;</div>
+                        <div>KETUA PROGRAM STUDI</div>
+                        <div style={{ marginBottom: '5px' }}>{prodiNameCleaned}</div>
+                        <div style={{ height: '65px' }}></div>
+                        <div><u><strong>{kaprodi.nama}</strong></u></div>
+                        <div>NIP. {kaprodi.nip}</div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     );
   }
