@@ -371,6 +371,28 @@ export default function App() {
     });
   }, []);
 
+  // Dynamic Browser Tab Title and Favicon Synchronization
+  useEffect(() => {
+    if (settings) {
+      const appName = settings.nama_aplikasi || 'SIAKAD';
+      const campusName = settings.nama_kampus || 'Politeknik Transportasi SDP Palembang';
+      document.title = `${appName} | ${campusName}`;
+
+      if (settings.logo_url) {
+        const faviconLink = document.querySelector("link[rel~='icon']");
+        if (faviconLink) {
+          faviconLink.removeAttribute('type');
+          faviconLink.href = settings.logo_url;
+        } else {
+          const newLink = document.createElement('link');
+          newLink.rel = 'icon';
+          newLink.href = settings.logo_url;
+          document.head.appendChild(newLink);
+        }
+      }
+    }
+  }, [settings?.logo_url, settings?.nama_aplikasi, settings?.nama_kampus]);
+
   // Find active users
   const currentTarunaObj = tarunaList.find(t => t.nim === activeTarunaNim) || tarunaList[0];
   const currentDosenObj = dosenList.find(d => d.nidn === activeDosenNidn) || dosenList[0];
