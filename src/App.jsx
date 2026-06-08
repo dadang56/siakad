@@ -57,12 +57,29 @@ export default function App() {
   const [jadwalPembelajaranList, setJadwalPembelajaranList] = useState([]);
 
   // 2. CONTEXT STATE (User Login & Otentikasi Supabase)
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [loggedInUser, setLoggedInUser] = useState(null);
-  const [currentRole, setCurrentRole] = useState(''); 
-  const [activeTarunaNim, setActiveTarunaNim] = useState(''); 
-  const [activeDosenNidn, setActiveDosenNidn] = useState(''); 
-  const [adminProdiDept, setAdminProdiDept] = useState(''); 
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    return localStorage.getItem('siakad_logged_in') === 'true';
+  });
+  const [loggedInUser, setLoggedInUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('siakad_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [currentRole, setCurrentRole] = useState(() => {
+    return localStorage.getItem('siakad_role') || '';
+  }); 
+  const [activeTarunaNim, setActiveTarunaNim] = useState(() => {
+    return localStorage.getItem('siakad_active_taruna_nim') || '';
+  }); 
+  const [activeDosenNidn, setActiveDosenNidn] = useState(() => {
+    return localStorage.getItem('siakad_active_dosen_nidn') || '';
+  }); 
+  const [adminProdiDept, setAdminProdiDept] = useState(() => {
+    return localStorage.getItem('siakad_admin_prodi_dept') || '';
+  }); 
   
   const [activeMenu, setActiveMenu] = useState('krs');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -82,382 +99,8 @@ export default function App() {
   };
 
   const handlePrintKhs = (printObj) => {
-    const KAPRODI_MAP = {
-      'D-III Nautika': { nama: 'Capt. Broto Priyono, S.SiT., M.T.', nip: '197908122008121002' },
-      'D-III Permesinan Kapal': { nama: 'Driaskoro Budi Sidharta, S.E., M.Sc.', nip: '197805132009121001' },
-      'D-III Manajemen Transportasi Perairan Daratan (MTPD)': { nama: 'Siti Nurlaili Triwahyuni, M.Sc.', nip: '198204152010122003' }
-    };
-    
-    const kaprodi = KAPRODI_MAP[printObj.prodiName] || { nama: '-', nip: '-' };
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      alert("Popup blocker menghalangi pencetakan. Harap izinkan popup untuk situs ini.");
-      return;
-    }
-
-    const cleanProdiName = (name) => {
-      if (!name) return '';
-      return name.replace(/^D-III\s+/i, '').toUpperCase();
-    };
-
-    const studentName = printObj.student.nama?.toUpperCase() || '';
-    const studentNim = printObj.student.nim_nip || '';
-    const angkatan = printObj.angkatan || '36';
-    const semester = printObj.semester || 1;
-    const prodiNameCleaned = cleanProdiName(printObj.prodiName);
-    const tahunAjaran = printObj.tahun_ajaran || settings.tahun_ajaran_aktif;
-    
-    // Build grades rows
-    let gradesHtml = '';
-    if (!printObj.grades || printObj.grades.length === 0) {
-      gradesHtml = `
-        <tr>
-          <td colspan="7" style="text-align: center; padding: 12px; font-family: 'Times New Roman', serif; border: 1px solid #000;">Belum ada nilai</td>
-        </tr>
-      `;
-    } else {
-      printObj.grades.forEach((g, idx) => {
-        const bobotVal = getBobot(g.nilai_huruf);
-        const bobotSksVal = (g.sks || 0) * bobotVal;
-        let predikat = 'Cukup';
-        if (g.nilai_huruf === 'A') predikat = 'Dengan Pujian';
-        else if (g.nilai_huruf?.startsWith('B')) predikat = 'Sangat Memuaskan';
-        else if (g.nilai_huruf?.startsWith('C')) predikat = 'Memuaskan';
-        else if (g.nilai_huruf === 'D') predikat = 'Kurang';
-        else if (g.nilai_huruf === 'E') predikat = 'Gagal';
-        
-        gradesHtml += `
-          <tr style="font-family: 'Times New Roman', serif;">
-            <td style="text-align: center; border: 1px solid #000; padding: 6px 8px;">${idx + 1}</td>
-            <td style="border: 1px solid #000; padding: 6px 8px;">${g.nama_mk || 'Mata Kuliah'}</td>
-            <td style="text-align: center; border: 1px solid #000; padding: 6px 8px;">${g.sks || 0}</td>
-            <td style="text-align: center; border: 1px solid #000; padding: 6px 8px;">${g.nilai_akhir ? g.nilai_akhir.toFixed(1) : '-'}</td>
-            <td style="text-align: center; border: 1px solid #000; padding: 6px 8px;">${g.nilai_huruf || '-'}</td>
-            <td style="text-align: center; border: 1px solid #000; padding: 6px 8px;">${bobotSksVal.toFixed(2)}</td>
-            <td style="text-align: center; border: 1px solid #000; padding: 6px 8px;">${predikat}</td>
-          </tr>
-        `;
-      });
-    }
-    
-    const totalSks = printObj.totalSks || 0;
-    const totalSksBobot = printObj.totalSksBobot || 0;
-    const ips = printObj.ips || 0;
-    
-    const logoUrl = settings.logo_url || '';
-    const logoImg = logoUrl 
-      ? `<img src="${logoUrl}" style="height: 80px; width: auto; object-fit: contain;" alt="Logo" />`
-      : `<div style="width: 80px; height: 80px; border: 1px solid #000; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 24px; font-family: 'Times New Roman', serif;">S</div>`;
-      
-    const formattedDate = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>KHS - ${studentName}</title>
-          <style>
-            @media print {
-              @page {
-                size: portrait;
-                margin: 15mm 15mm 15mm 15mm;
-              }
-              body {
-                background: white !important;
-                color: black !important;
-              }
-            }
-            body {
-              font-family: 'Times New Roman', Times, serif;
-              color: #000;
-              background-color: #fff;
-              margin: 0;
-              padding: 10px;
-              font-size: 10pt;
-              line-height: 1.3;
-            }
-            .header-container {
-              display: flex;
-              align-items: center;
-              gap: 20px;
-              margin-bottom: 10px;
-            }
-            .header-logo {
-              flex-shrink: 0;
-            }
-            .header-text {
-              flex-grow: 1;
-              text-align: center;
-            }
-            .univ-name {
-              font-size: 13pt;
-              font-weight: bold;
-              margin: 0 0 4px 0;
-            }
-            .univ-info {
-              font-size: 8.5pt;
-              margin: 0 0 2px 0;
-            }
-            .double-line {
-              border-top: 3px double #000;
-              margin-bottom: 15px;
-            }
-            .doc-title {
-              text-align: center;
-              font-size: 12pt;
-              font-weight: bold;
-              text-decoration: underline;
-              margin-bottom: 15px;
-              letter-spacing: 0.5px;
-            }
-            .info-grid {
-              display: flex;
-              justify-content: space-between;
-              margin-bottom: 15px;
-            }
-            .info-left {
-              flex: 1;
-            }
-            .info-right {
-              width: 240px;
-              flex-shrink: 0;
-            }
-            .info-table {
-              border-collapse: collapse;
-              width: 100%;
-            }
-            .info-table td {
-              padding: 2px 4px;
-              font-size: 9.5pt;
-              vertical-align: top;
-            }
-            .info-table td.label {
-              width: 150px;
-              font-weight: 500;
-            }
-            .catatan-box {
-              border: 1px solid #000;
-              padding: 6px 10px;
-              font-size: 8pt;
-            }
-            .catatan-title {
-              font-weight: bold;
-              margin-bottom: 2px;
-            }
-            .grades-table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-bottom: 15px;
-              font-size: 9.5pt;
-            }
-            .grades-table th {
-              border: 1px solid #000;
-              padding: 6px 4px;
-              font-weight: bold;
-              text-align: center;
-              font-size: 9pt;
-            }
-            .grades-table td {
-              border: 1px solid #000;
-              padding: 5px 6px;
-            }
-            .grades-table tfoot td {
-              font-weight: bold;
-              border-top: 2px double #000 !important;
-            }
-            .footer-container {
-              display: flex;
-              justify-content: space-between;
-              align-items: flex-start;
-              margin-top: 15px;
-            }
-            .indices-box {
-              border: 1px solid #000;
-              padding: 6px 10px;
-              width: 260px;
-              font-size: 9pt;
-            }
-            .indices-table {
-              width: 100%;
-              border-collapse: collapse;
-            }
-            .indices-table td {
-              padding: 2px 0;
-            }
-            .indices-table td.label {
-              width: 190px;
-            }
-            .signatures-box {
-              width: 500px;
-              display: flex;
-              flex-direction: column;
-              align-items: flex-end;
-              font-size: 9.5pt;
-            }
-            .date-row {
-              margin-bottom: 10px;
-              padding-right: 40px;
-            }
-            .sigs-row {
-              display: flex;
-              justify-content: space-between;
-              width: 100%;
-            }
-            .sig-col {
-              width: 48%;
-              text-align: center;
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-            }
-            .sig-space {
-              height: 55px;
-            }
-            .sig-name {
-              font-weight: bold;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header-container">
-            <div class="header-logo">
-              ${logoImg}
-            </div>
-            <div class="header-text">
-              <h2 class="univ-name">${settings.nama_kampus?.toUpperCase() || 'POLITEKNIK TRANSPORTASI SUNGAI, DANAU DAN PENYEBERANGAN PALEMBANG'}</h2>
-              <p class="univ-info">${settings.alamat_kampus || 'Jl. Sabar Jaya No 116, Mariana, Kec. Banyuasin I, Kab. Banyuasin, Sumatera Selatan 30962'}</p>
-              <p class="univ-info">Telp: ${settings.telepon_kampus || '(0711) 712345'} | Email: ${settings.email_kampus || 'info@poltektrans.ac.id'}</p>
-            </div>
-          </div>
-          <div class="double-line"></div>
-          
-          <h3 class="doc-title">KARTU HASIL STUDI (KHS)</h3>
-          
-          <div class="info-grid">
-            <div class="info-left">
-              <table class="info-table">
-                <tbody>
-                  <tr>
-                    <td class="label">TAHUN AKADEMIK</td>
-                    <td>: ${tahunAjaran}</td>
-                  </tr>
-                  <tr>
-                    <td class="label">NAMA TARUNA</td>
-                    <td>: ${studentName}</td>
-                  </tr>
-                  <tr>
-                    <td class="label">NOMOR TARUNA</td>
-                    <td>: ${studentNim}</td>
-                  </tr>
-                  <tr>
-                    <td class="label">ANGKATAN</td>
-                    <td>: Angkatan ${angkatan}</td>
-                  </tr>
-                  <tr>
-                    <td class="label">TINGKAT/SEMESTER</td>
-                    <td>: Semester ${semester}</td>
-                  </tr>
-                  <tr>
-                    <td class="label">PROGRAM STUDI</td>
-                    <td>: ${prodiNameCleaned}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="info-right">
-              <div class="catatan-box">
-                <div class="catatan-title">Catatan:</div>
-                <div>Lembar 1 : Taruna Ybs</div>
-                <div>Lembar 2 : Orang Tua Taruna Ybs</div>
-                <div>Lembar 3 : ${prodiNameCleaned}</div>
-              </div>
-            </div>
-          </div>
-          
-          <table class="grades-table">
-            <thead>
-              <tr>
-                <th style="width: 35px; text-align: center;">No</th>
-                <th style="text-align: left;">MATA KULIAH</th>
-                <th style="width: 75px; text-align: center;">BOBOT<br/>SKS</th>
-                <th style="width: 80px; text-align: center;">NILAI<br/>ANGKA</th>
-                <th style="width: 65px; text-align: center;">HURUF</th>
-                <th style="width: 100px; text-align: center;">BOBOT<br/>x<br/>ANGKA</th>
-                <th style="width: 120px; text-align: center;">PREDIKAT</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${gradesHtml}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td colspan="2" style="text-align: right; font-weight: bold; padding-right: 15px;">Jumlah</td>
-                <td style="text-align: center; font-weight: bold;">${totalSks}</td>
-                <td colspan="2"></td>
-                <td style="text-align: center; font-weight: bold;">${totalSksBobot.toFixed(2)}</td>
-                <td></td>
-              </tr>
-            </tfoot>
-          </table>
-          
-          <div class="footer-container">
-            <div class="indices-box">
-              <table class="indices-table">
-                <tbody>
-                  <tr>
-                    <td class="label">INDEKS PRESTASI SEMESTER (IPS)</td>
-                    <td>: ${ips.toFixed(2)}</td>
-                  </tr>
-                  <tr>
-                    <td class="label">NILAI KONDITE (NK)</td>
-                    <td>: 0.00</td>
-                  </tr>
-                  <tr>
-                    <td class="label">NILAI KESAMAPTAAN (NS)</td>
-                    <td>: 0.00</td>
-                  </tr>
-                  <tr>
-                    <td class="label">PERINGKAT AKHIR SEMESTER (PAS)</td>
-                    <td>: 0.00</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            
-            <div class="signatures-box">
-              <div class="date-row">Palembang, ${formattedDate}</div>
-              <div class="sigs-row">
-                <div class="sig-col">
-                  <div>Mengetahui,</div>
-                  <div style="font-weight: bold; font-size: 8.5pt;">KEPALA BAGIAN ADMINISTRASI</div>
-                  <div style="font-weight: bold; font-size: 8.5pt; margin-bottom: 5px;">AKADEMIK DAN KETARUNAAN</div>
-                  <div class="sig-space"></div>
-                  <div class="sig-name"><u>${settings.pejabat_akademik || 'Kodrat Alam, S.SiT., MT.'}</u></div>
-                  <div>NIP. ${settings.nip_pejabat_akademik || '197806292000031001'}</div>
-                </div>
-                
-                <div class="sig-col">
-                  <div>&nbsp;</div>
-                  <div style="font-weight: bold; font-size: 8.5pt;">KETUA PROGRAM STUDI</div>
-                  <div style="font-weight: bold; font-size: 8.5pt; margin-bottom: 5px;">${prodiNameCleaned}</div>
-                  <div class="sig-space"></div>
-                  <div class="sig-name"><u>${kaprodi.nama}</u></div>
-                  <div>NIP. ${kaprodi.nip}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <script>
-            window.onload = function() {
-              setTimeout(function() {
-                window.print();
-              }, 300);
-            };
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+    localStorage.setItem('siakad_print_khs_data', JSON.stringify(printObj));
+    window.open(window.location.origin + window.location.pathname + '?print-khs=true', '_blank');
   };
 
   // Reset menu when switching role
@@ -1591,12 +1234,15 @@ export default function App() {
           mappedRole = 'admin_prodi';
           const dept = PRODI_MAP_FROM_DB[user.prodi_id] || 'D-III Nautika';
           setAdminProdiDept(dept);
+          localStorage.setItem('siakad_admin_prodi_dept', dept);
         } else if (user.role === 'mahasiswa') {
           mappedRole = 'taruna';
           setActiveTarunaNim(user.nim_nip);
+          localStorage.setItem('siakad_active_taruna_nim', user.nim_nip);
         } else if (user.role === 'dosen') {
           mappedRole = 'dosen';
           setActiveDosenNidn(user.nim_nip);
+          localStorage.setItem('siakad_active_dosen_nidn', user.nim_nip);
         } else if (user.role === 'keuangan') {
           mappedRole = 'keuangan';
         } else {
@@ -1606,14 +1252,25 @@ export default function App() {
         setCurrentRole(mappedRole);
         setLoggedInUser(user);
         setIsLoggedIn(true);
+
+        localStorage.setItem('siakad_logged_in', 'true');
+        localStorage.setItem('siakad_user', JSON.stringify(user));
+        localStorage.setItem('siakad_role', mappedRole);
+
         return true;
       }
 
       // 2. Fallback keuangan account for testing/first run convenience
       if (username === 'keuangan' && password === 'keuangan123') {
+        const fallbackUser = { nama: 'Hj. Masayu, S.E.', role: 'keuangan' };
         setCurrentRole('keuangan');
-        setLoggedInUser({ nama: 'Hj. Masayu, S.E.', role: 'keuangan' });
+        setLoggedInUser(fallbackUser);
         setIsLoggedIn(true);
+
+        localStorage.setItem('siakad_logged_in', 'true');
+        localStorage.setItem('siakad_user', JSON.stringify(fallbackUser));
+        localStorage.setItem('siakad_role', 'keuangan');
+
         return true;
       }
 
@@ -1632,7 +1289,393 @@ export default function App() {
     setActiveDosenNidn('');
     setAdminProdiDept('');
     setIsSidebarOpen(false);
+
+    localStorage.removeItem('siakad_logged_in');
+    localStorage.removeItem('siakad_user');
+    localStorage.removeItem('siakad_role');
+    localStorage.removeItem('siakad_active_taruna_nim');
+    localStorage.removeItem('siakad_active_dosen_nidn');
+    localStorage.removeItem('siakad_admin_prodi_dept');
   };
+
+  // Handle print page check
+  const isPrintPage = window.location.search.includes('print-khs=true');
+
+  useEffect(() => {
+    if (isPrintPage) {
+      const timer = setTimeout(() => {
+        window.print();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isPrintPage]);
+
+  if (isPrintPage) {
+    let printData = null;
+    try {
+      printData = JSON.parse(localStorage.getItem('siakad_print_khs_data'));
+    } catch (e) {
+      console.error("Gagal membaca data cetak KHS:", e);
+    }
+
+    if (!printData) {
+      return <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>Tidak ada data cetak. Silakan coba cetak kembali dari portal SIAKAD.</div>;
+    }
+
+    const cleanProdiName = (name) => {
+      if (!name) return '';
+      return name.replace(/^D-III\s+/i, '').toUpperCase();
+    };
+
+    const studentName = printData.student?.nama?.toUpperCase() || '';
+    const studentNim = printData.student?.nim_nip || '';
+    const angkatan = printData.angkatan || '36';
+    const semester = printData.semester || 1;
+    const prodiNameCleaned = cleanProdiName(printData.prodiName);
+    const tahunAjaran = printData.tahun_ajaran || settings?.tahun_ajaran_aktif;
+    const totalSks = printData.totalSks || 0;
+    const totalSksBobot = printData.totalSksBobot || 0;
+    const ips = printData.ips || 0;
+
+    const KAPRODI_MAP = {
+      'D-III Nautika': { nama: 'Capt. Broto Priyono, S.SiT., M.T.', nip: '197908122008121002' },
+      'D-III Permesinan Kapal': { nama: 'Driaskoro Budi Sidharta, S.E., M.Sc.', nip: '197805132009121001' },
+      'D-III Manajemen Transportasi Perairan Daratan (MTPD)': { nama: 'Siti Nurlaili Triwahyuni, M.Sc.', nip: '198204152010122003' }
+    };
+    const kaprodi = KAPRODI_MAP[printData.prodiName] || { nama: '-', nip: '-' };
+
+    const formattedDate = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    return (
+      <div style={{
+        fontFamily: "'Times New Roman', Times, serif",
+        color: '#000',
+        backgroundColor: '#fff',
+        padding: '20px',
+        fontSize: '10pt',
+        lineHeight: '1.3',
+        minHeight: '100vh',
+        boxSizing: 'border-box'
+      }}>
+        <style dangerouslySetInnerHTML={{__html: `
+          @media print {
+            @page {
+              size: portrait;
+              margin: 15mm 15mm 15mm 15mm;
+            }
+            body {
+              background: white !important;
+              color: black !important;
+            }
+          }
+          .header-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 10px;
+          }
+          .header-logo {
+            flex-shrink: 0;
+          }
+          .header-logo img {
+            height: 80px;
+            width: auto;
+            object-fit: contain;
+          }
+          .header-text {
+            flex-grow: 1;
+            text-align: center;
+          }
+          .univ-name {
+            font-size: 13pt;
+            font-weight: bold;
+            margin: 0 0 4px 0;
+          }
+          .univ-info {
+            font-size: 8.5pt;
+            margin: 0 0 2px 0;
+          }
+          .double-line {
+            border-top: 3px double #000;
+            margin-bottom: 15px;
+          }
+          .doc-title {
+            text-align: center;
+            font-size: 12pt;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 15px;
+            letter-spacing: 0.5px;
+          }
+          .info-grid {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+          }
+          .info-left {
+            flex: 1;
+          }
+          .info-right {
+            width: 240px;
+            flex-shrink: 0;
+          }
+          .info-table {
+            border-collapse: collapse;
+            width: 100%;
+          }
+          .info-table td {
+            padding: 2px 4px;
+            font-size: 9.5pt;
+            vertical-align: top;
+          }
+          .info-table td.label {
+            width: 150px;
+            font-weight: 500;
+          }
+          .catatan-box {
+            border: 1px solid #000;
+            padding: 6px 10px;
+            font-size: 8pt;
+          }
+          .catatan-title {
+            font-weight: bold;
+            margin-bottom: 2px;
+          }
+          .grades-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            font-size: 9.5pt;
+          }
+          .grades-table th {
+            border: 1px solid #000;
+            padding: 6px 4px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 9pt;
+          }
+          .grades-table td {
+            border: 1px solid #000;
+            padding: 5px 6px;
+          }
+          .grades-table tfoot td {
+            font-weight: bold;
+            border-top: 2px double #000 !important;
+          }
+          .footer-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-top: 15px;
+          }
+          .indices-box {
+            border: 1px solid #000;
+            padding: 6px 10px;
+            width: 260px;
+            font-size: 9pt;
+          }
+          .indices-table {
+            width: 100%;
+            border-collapse: collapse;
+          }
+          .indices-table td {
+            padding: 2px 0;
+          }
+          .indices-table td.label {
+            width: 190px;
+          }
+          .signatures-box {
+            width: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            font-size: 9.5pt;
+          }
+          .date-row {
+            margin-bottom: 10px;
+            padding-right: 40px;
+          }
+          .sigs-row {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+          }
+          .sig-col {
+            width: 48%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          }
+          .sig-space {
+            height: 55px;
+          }
+          .sig-name {
+            font-weight: bold;
+          }
+        `}} />
+
+        <div className="header-container">
+          <div className="header-logo">
+            {settings?.logo_url ? (
+              <img src={settings.logo_url} alt="Logo" />
+            ) : (
+              <div style={{ width: '80px', height: '80px', border: '1px solid #000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '24px' }}>S</div>
+            )}
+          </div>
+          <div className="header-text">
+            <h2 className="univ-name">{settings?.nama_kampus?.toUpperCase() || 'POLITEKNIK TRANSPORTASI SUNGAI, DANAU DAN PENYEBERANGAN PALEMBANG'}</h2>
+            <p className="univ-info">{settings?.alamat_kampus || 'Jl. Sabar Jaya No 116, Mariana, Kec. Banyuasin I, Kab. Banyuasin, Sumatera Selatan 30962'}</p>
+            <p className="univ-info">Telp: {settings?.telepon_kampus || '(0711) 712345'} | Email: {settings?.email_kampus || 'info@poltektrans.ac.id'}</p>
+          </div>
+        </div>
+        <div className="double-line"></div>
+        
+        <h3 className="doc-title">KARTU HASIL STUDI (KHS)</h3>
+        
+        <div className="info-grid">
+          <div className="info-left">
+            <table className="info-table">
+              <tbody>
+                <tr>
+                  <td className="label">TAHUN AKADEMIK</td>
+                  <td>: {tahunAjaran}</td>
+                </tr>
+                <tr>
+                  <td className="label">NAMA TARUNA</td>
+                  <td>: {studentName}</td>
+                </tr>
+                <tr>
+                  <td className="label">NOMOR TARUNA</td>
+                  <td>: {studentNim}</td>
+                </tr>
+                <tr>
+                  <td className="label">ANGKATAN</td>
+                  <td>: Angkatan {angkatan}</td>
+                </tr>
+                <tr>
+                  <td className="label">TINGKAT/SEMESTER</td>
+                  <td>: Semester {semester}</td>
+                </tr>
+                <tr>
+                  <td className="label">PROGRAM STUDI</td>
+                  <td>: {prodiNameCleaned}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div className="info-right">
+            <div className="catatan-box">
+              <div className="catatan-title">Catatan:</div>
+              <div>Lembar 1 : Taruna Ybs</div>
+              <div>Lembar 2 : Orang Tua Taruna Ybs</div>
+              <div>Lembar 3 : {prodiNameCleaned}</div>
+            </div>
+          </div>
+        </div>
+        
+        <table className="grades-table">
+          <thead>
+            <tr>
+              <th style={{ width: '35px', textAlign: 'center' }}>No</th>
+              <th style={{ textAlign: 'left' }}>MATA KULIAH</th>
+              <th style={{ width: '75px', textAlign: 'center' }}>BOBOT<br/>SKS</th>
+              <th style={{ width: '80px', textAlign: 'center' }}>NILAI<br/>ANGKA</th>
+              <th style={{ width: '65px', textAlign: 'center' }}>HURUF</th>
+              <th style={{ width: '100px', textAlign: 'center' }}>BOBOT<br/>x<br/>ANGKA</th>
+              <th style={{ width: '120px', textAlign: 'center' }}>PREDIKAT</th>
+            </tr>
+          </thead>
+          <tbody>
+            {!printData.grades || printData.grades.length === 0 ? (
+              <tr>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '12px', border: '1px solid #000' }}>Belum ada nilai</td>
+              </tr>
+            ) : (
+              printData.grades.map((g, idx) => {
+                const bobotVal = getBobot(g.nilai_huruf);
+                const bobotSksVal = (g.sks || 0) * bobotVal;
+                let predikat = 'Cukup';
+                if (g.nilai_huruf === 'A') predikat = 'Dengan Pujian';
+                else if (g.nilai_huruf?.startsWith('B')) predikat = 'Sangat Memuaskan';
+                else if (g.nilai_huruf?.startsWith('C')) predikat = 'Memuaskan';
+                else if (g.nilai_huruf === 'D') predikat = 'Kurang';
+                else if (g.nilai_huruf === 'E') predikat = 'Gagal';
+                return (
+                  <tr key={idx}>
+                    <td style={{ textAlign: 'center' }}>{idx + 1}</td>
+                    <td>{g.nama_mk}</td>
+                    <td style={{ textAlign: 'center' }}>{g.sks || 0}</td>
+                    <td style={{ textAlign: 'center' }}>{g.nilai_akhir ? g.nilai_akhir.toFixed(1) : '-'}</td>
+                    <td style={{ textAlign: 'center' }}>{g.nilai_huruf || '-'}</td>
+                    <td style={{ textAlign: 'center' }}>{bobotSksVal.toFixed(2)}</td>
+                    <td style={{ textAlign: 'center' }}>{predikat}</td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colSpan="2" style={{ textAlign: 'right', fontWeight: 'bold', paddingRight: '15px' }}>Jumlah</td>
+              <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{totalSks}</td>
+              <td colSpan="2"></td>
+              <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{totalSksBobot.toFixed(2)}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+        
+        <div className="footer-container">
+          <div className="indices-box">
+            <table className="indices-table">
+              <tbody>
+                <tr>
+                  <td className="label">INDEKS PRESTASI SEMESTER (IPS)</td>
+                  <td>: {ips.toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td className="label">NILAI KONDITE (NK)</td>
+                  <td>: 0.00</td>
+                </tr>
+                <tr>
+                  <td className="label">NILAI KESAMAPTAAN (NS)</td>
+                  <td>: 0.00</td>
+                </tr>
+                <tr>
+                  <td className="label">PERINGKAT AKHIR SEMESTER (PAS)</td>
+                  <td>: 0.00</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <div className="signatures-box">
+            <div className="date-row">Palembang, {formattedDate}</div>
+            <div className="sigs-row">
+              <div className="sig-col">
+                <div>Mengetahui,</div>
+                <div style={{ fontWeight: 'bold', fontSize: '8.5pt' }}>KEPALA BAGIAN ADMINISTRASI</div>
+                <div style={{ fontWeight: 'bold', fontSize: '8.5pt', marginBottom: '5px' }}>AKADEMIK DAN KETARUNAAN</div>
+                <div className="sig-space"></div>
+                <div className="sig-name"><u>{settings?.pejabat_akademik || 'Kodrat Alam, S.SiT., MT.'}</u></div>
+                <div>NIP. {settings?.nip_pejabat_akademik || '197806292000031001'}</div>
+              </div>
+              
+              <div className="sig-col">
+                <div>&nbsp;</div>
+                <div style={{ fontWeight: 'bold', fontSize: '8.5pt' }}>KETUA PROGRAM STUDI</div>
+                <div style={{ fontWeight: 'bold', fontSize: '8.5pt', marginBottom: '5px' }}>{prodiNameCleaned}</div>
+                <div className="sig-space"></div>
+                <div className="sig-name"><u>{kaprodi.nama}</u></div>
+                <div>NIP. {kaprodi.nip}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!isLoggedIn) {
     return <Login onLogin={handleLoginSubmit} settings={settings} />;
