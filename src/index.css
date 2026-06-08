@@ -839,9 +839,10 @@ h1, h2, h3, h4, h5, h6 {
   backdrop-filter: blur(8px);
   z-index: 1100;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 20px;
+  padding: 40px 20px;
+  overflow-y: auto;
   animation: fadeIn 0.2s ease;
 }
 
