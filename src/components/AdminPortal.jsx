@@ -491,11 +491,11 @@ export default function AdminPortal({
               <h2 className="page-title">Manajemen User</h2>
               <p className="page-subtitle">
                 {currentRole === 'admin' 
-                  ? 'Melihat daftar pengguna sistem CAT, LMS, dan SIAKAD (Adm. Akademik Monitoring).' 
-                  : `Kelola data pengguna sistem pada Program Studi ${adminProdiDept}.`}
+                  ? 'Kelola data pengguna sistem CAT, LMS, dan SIAKAD secara terpadu.' 
+                  : `Melihat data pengguna sistem pada Program Studi ${adminProdiDept} (Monitoring Prodi).`}
               </p>
             </div>
-            {currentRole !== 'admin' && (
+            {currentRole === 'admin' && (
               <button onClick={handleOpenAddUser} className="btn btn-primary btn-sm">
                 <Plus className="menu-icon" /> Tambah User Baru
               </button>
@@ -651,7 +651,7 @@ export default function AdminPortal({
                           </span>
                         </td>
                         <td style={{ textAlign: 'center' }}>
-                          {currentRole !== 'admin' ? (
+                          {currentRole === 'admin' ? (
                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                               <button onClick={() => handleOpenEditUser(user)} className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }}>
                                 <Edit style={{ width: '14px', height: '14px' }} />
@@ -1472,7 +1472,7 @@ export default function AdminPortal({
                               <span className="badge badge-warning">Menunggu Ka. Prodi</span>
                             </td>
                             <td style={{ textAlign: 'center' }}>
-                              {currentRole !== 'admin' ? (
+                              {currentRole === 'admin_prodi' ? (
                                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                                   <button 
                                     onClick={() => {

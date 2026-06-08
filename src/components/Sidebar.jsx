@@ -42,17 +42,25 @@ export default function Sidebar({
           { id: 'presensi', label: 'Monitoring presensi mahasiswa', icon: CheckSquare }
         ];
       case 'admin':
-      case 'admin_prodi':
         return [
           { id: 'dashboard', label: 'Dashboard Admin', icon: LayoutDashboard },
           { id: 'users', label: 'Manajemen User', icon: Users },
-          { id: 'kelas', label: 'Kelas', icon: GraduationCap },
-          { id: 'matakuliah', label: 'Mata Kuliah', icon: BookOpen },
-          { id: 'jadwal-pembelajaran', label: 'Jadwal Pembelajaran', icon: Calendar },
+          { id: 'kelas', label: 'Kelas (Monitoring)', icon: GraduationCap },
+          { id: 'matakuliah', label: 'Mata Kuliah (Monitoring)', icon: BookOpen },
+          { id: 'jadwal-pembelajaran', label: 'Jadwal Pembelajaran (Monitoring)', icon: Calendar },
           { id: 'dosen-pembimbing', label: 'Dosen Pembimbing Akademik', icon: UserCheck },
-          { id: 'krs-prodi', label: 'Persetujuan KRS', icon: UserCheck },
           { id: 'khs-admin', label: 'Kartu Hasil Semester (KHS)', icon: Award },
           { id: 'semester', label: 'Pengaturan', icon: SettingsIcon }
+        ];
+      case 'admin_prodi':
+        return [
+          { id: 'dashboard', label: 'Dashboard Admin', icon: LayoutDashboard },
+          { id: 'kelas', label: 'Kelola Kelas', icon: GraduationCap },
+          { id: 'matakuliah', label: 'Kelola Mata Kuliah', icon: BookOpen },
+          { id: 'jadwal-pembelajaran', label: 'Kelola Jadwal Pembelajaran', icon: Calendar },
+          { id: 'dosen-pembimbing', label: 'Dosen Pembimbing Akademik', icon: UserCheck },
+          { id: 'krs-prodi', label: 'Persetujuan KRS', icon: UserCheck },
+          { id: 'khs-admin', label: 'Kartu Hasil Semester (KHS)', icon: Award }
         ];
       case 'keuangan':
         return [
