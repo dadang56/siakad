@@ -261,7 +261,7 @@ export default function Login({ onLogin, settings }) {
               
               {/* Username Input */}
               <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label" style={{ color: '#cbd5e1', fontSize: '12px', marginBottom: '6px', fontWeight: '600' }}>Username / NIM / NIP:</label>
+                <label className="form-label" style={{ color: '#cbd5e1', fontSize: '12px', marginBottom: '6px', fontWeight: '600' }}>Username:</label>
                 <div style={{ position: 'relative' }}>
                   <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', display: 'flex' }}>
                     <User style={{ width: '16px', height: '16px' }} />
@@ -270,7 +270,7 @@ export default function Login({ onLogin, settings }) {
                     type="text" 
                     value={username} 
                     onChange={(e) => { setUsername(e.target.value); setError(''); }}
-                    placeholder="NIM, NIP, atau username"
+                    placeholder="Username Anda"
                     className="form-control"
                     style={{ paddingLeft: '40px', background: 'rgba(0,0,0,0.3)', height: '42px', fontSize: '13px' }}
                     required

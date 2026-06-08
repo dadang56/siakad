@@ -915,11 +915,11 @@ export default function App() {
   const handleAddUser = async (user) => {
     try {
       const { error } = await supabase.from('users').insert([{
-        nim_nip: user.nim_nip,
-        username: user.username || user.nim_nip,
+        nim_nip: user.nim_nip ? user.nim_nip.trim() : null,
+        username: user.username ? user.username.trim() : null,
         nama: user.nama,
         email: user.email || null,
-        password: user.password || user.nim_nip,
+        password: user.password || user.username || '123456',
         role: user.role,
         prodi_id: user.prodi_id || null,
         kelas_id: user.kelas_id || null,
@@ -938,8 +938,8 @@ export default function App() {
   const handleEditUser = async (user) => {
     try {
       const { error } = await supabase.from('users').update({
-        nim_nip: user.nim_nip,
-        username: user.username || user.nim_nip,
+        nim_nip: user.nim_nip ? user.nim_nip.trim() : null,
+        username: user.username ? user.username.trim() : null,
         nama: user.nama,
         email: user.email || null,
         password: user.password,
@@ -1195,7 +1195,7 @@ export default function App() {
       const { data: user, error } = await supabase
         .from('users')
         .select('*')
-        .or(`nim_nip.eq.${username},username.eq.${username}`)
+        .eq('username', username)
         .eq('password', password)
         .maybeSingle();
 

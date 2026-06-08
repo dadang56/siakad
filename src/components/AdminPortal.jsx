@@ -1820,25 +1820,25 @@ export default function AdminPortal({
             <form onSubmit={handleSaveUserSubmit}>
               <div className="modal-body">
                 <div className="form-group">
-                  <label className="form-label">Nomor Induk (NIM/NIP):</label>
-                  <input 
-                    type="text" 
-                    value={targetUser.nim_nip}
-                    onChange={(e) => setTargetUser({ ...targetUser, nim_nip: e.target.value })}
-                    className="form-control"
-                    required
-                    disabled={modalType === 'edit'}
-                  />
-                </div>
-
-                <div className="form-group">
                   <label className="form-label">Username:</label>
                   <input 
                     type="text" 
                     value={targetUser.username}
                     onChange={(e) => setTargetUser({ ...targetUser, username: e.target.value })}
                     className="form-control"
-                    placeholder="Biarkan kosong untuk disamakan dengan NIM/NIP"
+                    placeholder="Masukkan username login"
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Nomor Induk (NIM/NIP) (Opsional):</label>
+                  <input 
+                    type="text" 
+                    value={targetUser.nim_nip}
+                    onChange={(e) => setTargetUser({ ...targetUser, nim_nip: e.target.value })}
+                    className="form-control"
+                    disabled={modalType === 'edit'}
                   />
                 </div>
 
