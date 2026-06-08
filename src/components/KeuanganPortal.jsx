@@ -26,11 +26,49 @@ export default function KeuanganPortal({
   const [kelasFilter, setKelasFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const [tarifMahasiswa, setTarifMahasiswa] = useState(settings.tarif_ukt || 0);
+  const [tarifPerSemester, setTarifPerSemester] = useState(() => {
+    const defaultTarif = settings?.tarif_ukt || 4500000;
+    return settings?.tarif_per_semester || {
+      "1": defaultTarif,
+      "2": defaultTarif,
+      "3": defaultTarif,
+      "4": defaultTarif,
+      "5": defaultTarif,
+      "6": defaultTarif,
+      "7": defaultTarif,
+      "8": defaultTarif
+    };
+  });
 
   useEffect(() => {
-    setTarifMahasiswa(settings.tarif_ukt || 0);
-  }, [settings.tarif_ukt]);
+    const defaultTarif = settings?.tarif_ukt || 4500000;
+    setTarifPerSemester(settings?.tarif_per_semester || {
+      "1": defaultTarif,
+      "2": defaultTarif,
+      "3": defaultTarif,
+      "4": defaultTarif,
+      "5": defaultTarif,
+      "6": defaultTarif,
+      "7": defaultTarif,
+      "8": defaultTarif
+    });
+  }, [settings]);
+
+  const handleTarifChange = (sem, val) => {
+    setTarifPerSemester(prev => ({
+      ...prev,
+      [String(sem)]: val
+    }));
+  };
+
+  const handleSaveTarifPerSemester = () => {
+    onUpdateSettings({ 
+      ...settings, 
+      tarif_per_semester: tarifPerSemester,
+      tarif_ukt: tarifPerSemester["1"] || settings.tarif_ukt || 4500000 
+    });
+    alert("Semua Tarif Semester berhasil diperbarui!");
+  };
 
   // Edit Modal State
   const [showEditModal, setShowEditModal] = useState(false);
@@ -57,7 +95,13 @@ export default function KeuanganPortal({
   };
 
   // Calculations
-  const tarifUkt = settings.tarif_ukt || 5000000;
+  const getTarifForSemester = (sem) => {
+    const key = String(sem || 1);
+    if (settings?.tarif_per_semester && settings.tarif_per_semester[key]) {
+      return settings.tarif_per_semester[key];
+    }
+    return settings?.tarif_ukt || 4500000;
+  };
   
   const prodis = [
     { name: 'D-III Nautika', color: 'var(--secondary)' },
@@ -308,7 +352,7 @@ export default function KeuanganPortal({
                         </td>
                         <td>{t.prodi}</td>
                         <td style={{ textAlign: 'center' }}>Smt {t.semester}</td>
-                        <td><strong>Rp {tarifUkt.toLocaleString('id-ID')}</strong></td>
+                        <td><strong>Rp {getTarifForSemester(t.semester).toLocaleString('id-ID')}</strong></td>
                         <td style={{ textAlign: 'center' }}>
                           <span className={`badge ${t.status_ukt === 'Lunas' ? 'badge-success' : 'badge-warning'}`}>
                             {t.status_ukt === 'Lunas' ? 'Lunas' : 'Belum Lunas'}
@@ -416,46 +460,51 @@ export default function KeuanganPortal({
           <div className="page-header">
             <div>
               <h1 className="page-title">Pengaturan Tarif Mahasiswa</h1>
-              <p className="page-subtitle">Atur nominal tagihan biaya kuliah / tarif dasar mahasiswa.</p>
+              <p className="page-subtitle">Atur nominal tagihan biaya kuliah / tarif dasar mahasiswa per semester.</p>
             </div>
           </div>
 
-          <div className="glass-card glow-cyan" style={{ maxWidth: '600px', padding: '24px' }}>
-            <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-              <DollarSign /> Atur Tarif Pembayaran
+          <div className="glass-card glow-cyan" style={{ maxWidth: '750px', padding: '24px' }}>
+            <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+              <DollarSign /> Atur Tarif Pembayaran per Semester
             </h3>
+            <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', marginBottom: '24px' }}>
+              Sesuaikan nominal biaya kuliah / tarif dasar untuk masing-masing semester (Semester 1 - 8).
+            </p>
 
-            <div className="form-group" style={{ marginBottom: '20px' }}>
-              <label className="form-label" style={{ display: 'block', marginBottom: '8px', fontSize: '13px', color: 'var(--text-body)' }}>
-                Tarif Mahasiswa Dasar (per Semester):
-              </label>
-              <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: '12px', top: '10px', color: 'var(--text-muted)', fontSize: '14px' }}>Rp</span>
-                <input 
-                  type="number" 
-                  value={tarifMahasiswa} 
-                  onChange={(e) => setTarifMahasiswa(parseInt(e.target.value) || 0)}
-                  style={{ 
-                    width: '100%', 
-                    padding: '10px 10px 10px 36px', 
-                    background: 'var(--bg-tertiary)', 
-                    border: '1px solid var(--glass-border)', 
-                    borderRadius: 'var(--radius-sm)', 
-                    color: 'var(--text-main)' 
-                  }}
-                />
-              </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+              {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
+                <div key={sem} className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '600', color: 'var(--text-body)' }}>
+                    Semester {sem}:
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <span style={{ position: 'absolute', left: '12px', top: '10px', color: 'var(--text-muted)', fontSize: '14px' }}>Rp</span>
+                    <input 
+                      type="number" 
+                      value={tarifPerSemester[String(sem)] || 0} 
+                      onChange={(e) => handleTarifChange(sem, parseInt(e.target.value) || 0)}
+                      style={{ 
+                        width: '100%', 
+                        padding: '10px 10px 10px 36px', 
+                        background: 'var(--bg-tertiary)', 
+                        border: '1px solid var(--glass-border)', 
+                        borderRadius: 'var(--radius-sm)', 
+                        color: 'var(--text-main)',
+                        fontSize: '14px'
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
 
             <button 
-              onClick={() => {
-                onUpdateSettings({ ...settings, tarif_ukt: tarifMahasiswa });
-                alert("Tarif Mahasiswa berhasil diperbarui!");
-              }} 
+              onClick={handleSaveTarifPerSemester} 
               className="btn btn-primary"
-              style={{ width: '100%' }}
+              style={{ width: '100%', padding: '12px', fontSize: '14px', fontWeight: '600' }}
             >
-              Simpan Tarif Baru
+              Simpan Semua Tarif Semester
             </button>
           </div>
         </div>

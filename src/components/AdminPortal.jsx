@@ -472,10 +472,23 @@ export default function AdminPortal({
                     <span className="status-item-subtitle">{settings.tahun_ajaran_aktif}</span>
                   </div>
                 </div>
-                <div className="status-item">
+                 <div className="status-item">
                   <div className="status-item-info">
                     <span className="status-item-title">Tarif Mahasiswa</span>
-                    <span className="status-item-subtitle">Rp {settings.tarif_ukt.toLocaleString('id-ID')}</span>
+                    <span className="status-item-subtitle">
+                      {(() => {
+                        if (settings.tarif_per_semester) {
+                          const values = Object.values(settings.tarif_per_semester);
+                          const min = Math.min(...values);
+                          const max = Math.max(...values);
+                          if (min === max) {
+                            return `Rp ${min.toLocaleString('id-ID')}`;
+                          }
+                          return `Rp ${min.toLocaleString('id-ID')} - Rp ${max.toLocaleString('id-ID')}`;
+                        }
+                        return `Rp ${settings.tarif_ukt?.toLocaleString('id-ID')}`;
+                      })()}
+                    </span>
                   </div>
                 </div>
               </div>

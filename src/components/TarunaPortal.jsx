@@ -35,6 +35,14 @@ export default function TarunaPortal({
   const [showPrintKrs, setShowPrintKrs] = useState(false);
   const [selectedSemester, setSelectedSemester] = useState(4);
 
+  const getTarifForSemester = (sem) => {
+    const key = String(sem || 1);
+    if (settings?.tarif_per_semester && settings.tarif_per_semester[key]) {
+      return settings.tarif_per_semester[key];
+    }
+    return settings?.tarif_ukt || 4500000;
+  };
+
   // Retrieve current KRS
   const currentKrs = krsList.find(krs => krs.nim === currentUser.nim && krs.tahun_ajaran === settings.tahun_ajaran_aktif);
   
@@ -851,7 +859,7 @@ export default function TarunaPortal({
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Mata Anggaran Pembayaran</div>
                 <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-main)', marginTop: '4px' }}>Tarif Mahasiswa Program Studi {currentUser.prodi}</div>
                 <div style={{ fontSize: '28px', fontFamily: 'Outfit', fontWeight: '800', color: 'var(--accent)', marginTop: '8px' }}>
-                  Rp {settings.tarif_ukt.toLocaleString('id-ID')}
+                  Rp {getTarifForSemester(currentUser.semester).toLocaleString('id-ID')}
                 </div>
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Batas Pembayaran: 15 Juni 2026</div>
               </div>
@@ -882,7 +890,7 @@ export default function TarunaPortal({
               <div className="status-list">
                 <div className="status-item">
                   <div className="status-item-info">
-                    <span className="status-item-title">Tarif Mahasiswa Semester 4</span>
+                    <span className="status-item-title">Tarif Mahasiswa Semester {currentUser.semester || 4}</span>
                     <span className="status-item-subtitle">{currentUser.status_ukt === 'Lunas' ? 'Lunas - VA Mandiri' : 'Menunggu Pembayaran'}</span>
                   </div>
                   <span className={`badge ${currentUser.status_ukt === 'Lunas' ? 'badge-success' : 'badge-warning'}`}>

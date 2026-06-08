@@ -405,7 +405,17 @@ export default function App() {
               nama_kampus: siakadConfig.nama_kampus || appConfig.institution || prev.nama_kampus,
               tahun_ajaran_aktif: siakadConfig.tahun_ajaran_aktif || prev.tahun_ajaran_aktif,
               krs_open: siakadConfig.krs_open !== undefined ? siakadConfig.krs_open : prev.krs_open,
-              tarif_ukt: siakadConfig.tarif_ukt || prev.tarif_ukt
+              tarif_ukt: siakadConfig.tarif_ukt || prev.tarif_ukt,
+              tarif_per_semester: siakadConfig.tarif_per_semester || prev.tarif_per_semester || {
+                "1": siakadConfig.tarif_ukt || prev.tarif_ukt || 4500000,
+                "2": siakadConfig.tarif_ukt || prev.tarif_ukt || 4500000,
+                "3": siakadConfig.tarif_ukt || prev.tarif_ukt || 4500000,
+                "4": siakadConfig.tarif_ukt || prev.tarif_ukt || 4500000,
+                "5": siakadConfig.tarif_ukt || prev.tarif_ukt || 4500000,
+                "6": siakadConfig.tarif_ukt || prev.tarif_ukt || 4500000,
+                "7": siakadConfig.tarif_ukt || prev.tarif_ukt || 4500000,
+                "8": siakadConfig.tarif_ukt || prev.tarif_ukt || 4500000
+              }
             };
             try {
               localStorage.setItem('siakad_cached_settings', JSON.stringify(next));
@@ -887,7 +897,8 @@ export default function App() {
         nama_kampus: newSettings.nama_kampus,
         tahun_ajaran_aktif: newSettings.tahun_ajaran_aktif,
         krs_open: newSettings.krs_open,
-        tarif_ukt: newSettings.tarif_ukt
+        tarif_ukt: newSettings.tarif_ukt,
+        tarif_per_semester: newSettings.tarif_per_semester
       };
 
       await supabase
