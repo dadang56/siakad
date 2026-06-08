@@ -1073,7 +1073,7 @@ export default function App() {
       <header className="role-switcher-bar">
         <div className="logo-container">
           <Anchor className="logo-icon" />
-          <span className="logo-text">SIAKAD POLTEKTRANS SDP PALEMBANG</span>
+          <span className="logo-text">{(settings.nama_aplikasi || 'SIAKAD')} {(settings.nama_kampus?.toUpperCase() || 'POLTEKTRANS SDP PALEMBANG')}</span>
         </div>
         
         <div className="switcher-buttons">
@@ -1093,7 +1093,7 @@ export default function App() {
             className={`btn-switch admin ${currentRole === 'admin' ? 'active' : ''}`}
             onClick={() => setCurrentRole('admin')}
           >
-            <ShieldAlert style={{ width: '13px', height: '13px' }} /> Admin (BAK)
+            <ShieldAlert style={{ width: '13px', height: '13px' }} /> Adm. Akademik
           </button>
           <button 
             className={`btn-switch admin ${currentRole === 'admin_prodi' ? 'active' : ''}`}
@@ -1125,6 +1125,7 @@ export default function App() {
         activeMenu={activeMenu}
         setActiveMenu={setActiveMenu}
         onLogout={handleLogout}
+        settings={settings}
       />
 
       {/* Main Content Area */}
@@ -1209,6 +1210,7 @@ export default function App() {
             tarunaList={tarunaList}
             settings={settings}
             onConfirmUkt={handlePayUkt}
+            onUpdateSettings={handleUpdateSettings}
           />
         )}
       </main>
@@ -1338,7 +1340,7 @@ export default function App() {
                 >
                   <ShieldAlert style={{ color: 'var(--accent)' }} />
                   <div style={{ textAlign: 'center' }}>
-                    <span className="user-select-name" style={{ color: 'var(--accent)' }}>Masuk sebagai Admin BAK</span>
+                    <span className="user-select-name" style={{ color: 'var(--accent)' }}>Masuk sebagai Adm. Akademik</span>
                     <span className="user-select-sub" style={{ display: 'block' }}>Kelola data master & semester</span>
                   </div>
                 </div>

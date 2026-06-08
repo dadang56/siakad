@@ -20,7 +20,8 @@ export default function Sidebar({
   currentUser, 
   activeMenu, 
   setActiveMenu, 
-  onLogout 
+  onLogout,
+  settings
 }) {
   
   // Menu definition based on role
@@ -56,7 +57,8 @@ export default function Sidebar({
       case 'keuangan':
         return [
           { id: 'dashboard', label: 'Dashboard Keuangan', icon: LayoutDashboard },
-          { id: 'verifikasi', label: 'Verifikasi Pembayaran', icon: UserCheck }
+          { id: 'verifikasi', label: 'Verifikasi Pembayaran', icon: UserCheck },
+          { id: 'tarif-setting', label: 'Pengaturan Tarif', icon: SettingsIcon }
         ];
       default:
         return [];
@@ -89,8 +91,7 @@ export default function Sidebar({
           <span className="profile-role">
             {currentRole === 'taruna' ? `Mahasiswa - ${currentUser?.nim}` : 
              currentRole === 'dosen' ? 'Dosen Wali' : 
-             currentRole === 'keuangan' ? 'Admin Keuangan' : 
-             currentRole === 'admin_prodi' ? `Admin Prodi - ${currentUser?.prodi || ''}` : 'Admin BAK'}
+             currentRole === 'keuangan' ? 'Admin Keuangan' :              currentRole === 'admin_prodi' ? `Admin Prodi - ${currentUser?.prodi || ''}` : 'Adm. Akademik'}
           </span>
         </div>
       </div>
@@ -128,8 +129,8 @@ export default function Sidebar({
           <span>Ganti User</span>
         </button>
         <div style={{ marginTop: '16px', fontSize: '10px' }}>
-          Poltektrans SDP Palembang<br />
-          SIAKAD v1.0.0 © 2026
+          {settings?.nama_kampus || 'Poltektrans SDP Palembang'}<br />
+          {settings?.nama_aplikasi || 'SIAKAD'} v1.0.0 © 2026
         </div>
       </div>
     </aside>

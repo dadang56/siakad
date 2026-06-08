@@ -261,6 +261,10 @@ export default function AdminPortal({
   // Settings State
   const [tempSettings, setTempSettings] = useState({ ...settings });
 
+  React.useEffect(() => {
+    setTempSettings({ ...settings });
+  }, [settings]);
+
   // Reset target forms
   const resetTarunaForm = () => setTargetTaruna({ nim: '', nama: '', prodi: 'D-III Nautika', semester: 1, kelas: '', email: '', ipk: 0, ips_prev: 0, status_ukt: 'Lunas', angkatan: '2026', dosen_wali_nidn: dosenList[0]?.nidn || '' });
   const resetDosenForm = () => setTargetDosen({ nidn: '', nama: '', prodi: 'D-III Nautika', email: '', telepon: '', status: 'Dosen Tetap' });
@@ -1212,11 +1216,11 @@ export default function AdminPortal({
         <div className="animate-fade-in">
           <div className="page-header">
             <div>
-              <h2 className="page-title">Konfigurasi Tahun Akademik</h2>
+              <h2 className="page-title">Pengaturan Aplikasi & Akademik</h2>
               <p className="page-subtitle">
-                {currentRole === 'admin' 
-                  ? 'Melihat semester aktif, masa pengisian KRS online, dan tarif UKT dasar (BAK Monitoring).' 
-                  : 'Atur semester aktif, masa pengisian KRS online, dan tarif UKT dasar.'}
+                {currentRole === 'admin_prodi' 
+                  ? 'Melihat semester aktif, masa pengisian KRS online, dan pengaturan sistem (Monitoring Prodi).' 
+                  : 'Atur semester aktif, masa pengisian KRS online, serta kustomisasi identitas aplikasi.'}
               </p>
             </div>
           </div>
@@ -1233,7 +1237,7 @@ export default function AdminPortal({
                 value={tempSettings.tahun_ajaran_aktif} 
                 onChange={(e) => setTempSettings({ ...tempSettings, tahun_ajaran_aktif: e.target.value })}
                 className="form-control"
-                disabled={currentRole === 'admin'}
+                disabled={currentRole === 'admin_prodi'}
               />
             </div>
 
@@ -1241,18 +1245,18 @@ export default function AdminPortal({
               <label className="form-label">Masa Pengisian KRS Online:</label>
               <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
                 <button 
-                  onClick={() => { if (currentRole !== 'admin') setTempSettings({ ...tempSettings, krs_open: true }) }}
+                  onClick={() => { if (currentRole !== 'admin_prodi') setTempSettings({ ...tempSettings, krs_open: true }) }}
                   className={`btn ${tempSettings.krs_open ? 'btn-primary' : 'btn-secondary'}`}
                   style={{ flex: 1 }}
-                  disabled={currentRole === 'admin'}
+                  disabled={currentRole === 'admin_prodi'}
                 >
                   <Check className="menu-icon" /> Buka Periode KRS
                 </button>
                 <button 
-                  onClick={() => { if (currentRole !== 'admin') setTempSettings({ ...tempSettings, krs_open: false }) }}
+                  onClick={() => { if (currentRole !== 'admin_prodi') setTempSettings({ ...tempSettings, krs_open: false }) }}
                   className={`btn ${!tempSettings.krs_open ? 'btn-danger' : 'btn-secondary'}`}
                   style={{ flex: 1 }}
-                  disabled={currentRole === 'admin'}
+                  disabled={currentRole === 'admin_prodi'}
                 >
                   ✕ Tutup Periode KRS
                 </button>
@@ -1260,21 +1264,39 @@ export default function AdminPortal({
             </div>
 
             <div className="form-group">
-              <label className="form-label">Tarif UKT Dasar (Rata-rata):</label>
-              <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: '12px', top: '10px', color: 'var(--text-muted)', fontSize: '14px' }}>Rp</span>
-                <input 
-                  type="number" 
-                  value={tempSettings.tarif_ukt} 
-                  onChange={(e) => setTempSettings({ ...tempSettings, tarif_ukt: parseInt(e.target.value) || 0 })}
-                  className="form-control"
-                  style={{ paddingLeft: '36px' }}
-                  disabled={currentRole === 'admin'}
-                />
-              </div>
+              <label className="form-label">Nama Aplikasi:</label>
+              <input 
+                type="text" 
+                value={tempSettings.nama_aplikasi || ''} 
+                onChange={(e) => setTempSettings({ ...tempSettings, nama_aplikasi: e.target.value })}
+                className="form-control"
+                disabled={currentRole === 'admin_prodi'}
+              />
             </div>
 
-            {currentRole !== 'admin' && (
+            <div className="form-group">
+              <label className="form-label">Sub Nama Aplikasi:</label>
+              <input 
+                type="text" 
+                value={tempSettings.sub_nama_aplikasi || ''} 
+                onChange={(e) => setTempSettings({ ...tempSettings, sub_nama_aplikasi: e.target.value })}
+                className="form-control"
+                disabled={currentRole === 'admin_prodi'}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Nama Kampus:</label>
+              <input 
+                type="text" 
+                value={tempSettings.nama_kampus || ''} 
+                onChange={(e) => setTempSettings({ ...tempSettings, nama_kampus: e.target.value })}
+                className="form-control"
+                disabled={currentRole === 'admin_prodi'}
+              />
+            </div>
+
+            {currentRole !== 'admin_prodi' && (
               <button onClick={handleSaveSettings} className="btn btn-success" style={{ width: '100%', marginTop: '12px' }}>
                 <Save className="menu-icon" /> Simpan Pengaturan
               </button>

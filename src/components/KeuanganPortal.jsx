@@ -18,11 +18,18 @@ export default function KeuanganPortal({
   activeMenu,
   tarunaList,
   settings,
-  onConfirmUkt
+  onConfirmUkt,
+  onUpdateSettings
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [prodiFilter, setProdiFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+
+  const [tarifMahasiswa, setTarifMahasiswa] = useState(settings.tarif_ukt || 0);
+
+  useEffect(() => {
+    setTarifMahasiswa(settings.tarif_ukt || 0);
+  }, [settings.tarif_ukt]);
 
   // Edit Modal State
   const [showEditModal, setShowEditModal] = useState(false);
@@ -254,7 +261,7 @@ export default function KeuanganPortal({
                     <th>Mahasiswa / NIM</th>
                     <th>Program Studi</th>
                     <th>Semester</th>
-                    <th>Tagihan UKT</th>
+                    <th>Tarif Mahasiswa</th>
                     <th style={{ textAlign: 'center' }}>Status</th>
                     <th>Keterangan</th>
                     <th style={{ textAlign: 'center' }}>Aksi Verifikasi</th>
@@ -377,6 +384,56 @@ export default function KeuanganPortal({
                 <button type="submit" className="btn btn-primary btn-sm">Simpan Perubahan</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* 3. PENGATURAN TARIF */}
+      {activeMenu === 'tarif-setting' && (
+        <div className="animate-fade-in">
+          <div className="page-header">
+            <div>
+              <h1 className="page-title">Pengaturan Tarif Mahasiswa</h1>
+              <p className="page-subtitle">Atur nominal tagihan biaya kuliah / UKT dasar mahasiswa.</p>
+            </div>
+          </div>
+
+          <div className="glass-card glow-cyan" style={{ maxWidth: '600px', padding: '24px' }}>
+            <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+              <DollarSign /> Atur Tarif Pembayaran
+            </h3>
+
+            <div className="form-group" style={{ marginBottom: '20px' }}>
+              <label className="form-label" style={{ display: 'block', marginBottom: '8px', fontSize: '13px', color: 'var(--text-body)' }}>
+                Tarif Mahasiswa Dasar (per Semester):
+              </label>
+              <div style={{ position: 'relative' }}>
+                <span style={{ position: 'absolute', left: '12px', top: '10px', color: 'var(--text-muted)', fontSize: '14px' }}>Rp</span>
+                <input 
+                  type="number" 
+                  value={tarifMahasiswa} 
+                  onChange={(e) => setTarifMahasiswa(parseInt(e.target.value) || 0)}
+                  style={{ 
+                    width: '100%', 
+                    padding: '10px 10px 10px 36px', 
+                    background: 'var(--bg-tertiary)', 
+                    border: '1px solid var(--glass-border)', 
+                    borderRadius: 'var(--radius-sm)', 
+                    color: 'var(--text-main)' 
+                  }}
+                />
+              </div>
+            </div>
+
+            <button 
+              onClick={() => {
+                onUpdateSettings({ ...settings, tarif_ukt: tarifMahasiswa });
+                alert("Tarif Mahasiswa berhasil diperbarui!");
+              }} 
+              className="btn btn-primary"
+              style={{ width: '100%' }}
+            >
+              Simpan Tarif Baru
+            </button>
           </div>
         </div>
       )}

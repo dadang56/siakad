@@ -987,5 +987,8 @@ export const SETTINGS = {
   periode_krs_mulai: "2026-06-01",
   periode_krs_selesai: "2026-06-15",
   krs_open: true,
-  tarif_ukt: 4500000
+  tarif_ukt: 4500000,
+  nama_aplikasi: "SIAKAD",
+  sub_nama_aplikasi: "Sistem Informasi Akademik",
+  nama_kampus: "Politeknik Transportasi SDP Palembang"
 };
