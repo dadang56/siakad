@@ -161,8 +161,12 @@ export default function App() {
   // Fetch Users from Supabase helper (unifying CAT, LMS, SIAKAD)
   const fetchUsersFromSupabase = async () => {
     try {
-      const { data: usersData } = await supabase.from('users').select('*');
-      if (usersData) {
+      const { data: rawUsers } = await supabase.from('users').select('*');
+      if (rawUsers) {
+        const usersData = rawUsers.map(u => ({
+          ...u,
+          role: u.role === 'pusbangkatar' ? 'keuangan' : u.role
+        }));
         setRawUsersList(usersData);
 
         const { data: kelasData } = await supabase.from('kelas').select('*');
@@ -946,7 +950,7 @@ export default function App() {
         nama: user.nama,
         email: user.email || null,
         password: user.password || user.username || '123456',
-        role: user.role,
+        role: user.role === 'keuangan' ? 'pusbangkatar' : user.role,
         prodi_id: user.prodi_id || null,
         kelas_id: user.kelas_id || null,
         is_active: user.is_active !== undefined ? user.is_active : true,
@@ -973,7 +977,7 @@ export default function App() {
         nama: user.nama,
         email: user.email || null,
         password: user.password,
-        role: user.role,
+        role: user.role === 'keuangan' ? 'pusbangkatar' : user.role,
         prodi_id: user.prodi_id || null,
         kelas_id: user.kelas_id || null,
         is_active: user.is_active,
@@ -1235,6 +1239,9 @@ export default function App() {
       }
 
       if (user) {
+        if (user.role === 'pusbangkatar') {
+          user.role = 'keuangan';
+        }
         let mappedRole = '';
         if (user.role === 'superadmin') {
           mappedRole = 'admin';
