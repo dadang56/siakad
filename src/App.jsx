@@ -1303,10 +1303,23 @@ export default function App() {
 
   useEffect(() => {
     if (isPrintPage) {
+      // Save original styles to restore on unmount (if applicable)
+      const originalBg = document.body.style.backgroundColor;
+      const originalColor = document.body.style.color;
+
+      // Apply print-friendly white background and black text styles to body
+      document.body.style.backgroundColor = '#ffffff';
+      document.body.style.color = '#000000';
+
       const timer = setTimeout(() => {
         window.print();
       }, 500);
-      return () => clearTimeout(timer);
+
+      return () => {
+        clearTimeout(timer);
+        document.body.style.backgroundColor = originalBg;
+        document.body.style.color = originalColor;
+      };
     }
   }, [isPrintPage]);
 
@@ -1319,7 +1332,34 @@ export default function App() {
     }
 
     if (!printData) {
-      return <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>Tidak ada data cetak. Silakan coba cetak kembali dari portal SIAKAD.</div>;
+      return (
+        <div style={{
+          padding: '40px',
+          fontFamily: 'sans-serif',
+          backgroundColor: '#ffffff',
+          color: '#000000',
+          minHeight: '100vh',
+          textAlign: 'center',
+          boxSizing: 'border-box'
+        }}>
+          <h2 style={{ color: '#000000', marginBottom: '10px' }}>Data Cetak KHS Tidak Ditemukan</h2>
+          <p style={{ color: '#555555', marginBottom: '20px' }}>Silakan kembali ke portal akademik dan klik tombol "Cetak KHS" atau "Cetak".</p>
+          <button 
+            onClick={() => window.close()} 
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#1d4ed8',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            Tutup Halaman
+          </button>
+        </div>
+      );
     }
 
     const cleanProdiName = (name) => {
@@ -1333,9 +1373,9 @@ export default function App() {
     const semester = printData.semester || 1;
     const prodiNameCleaned = cleanProdiName(printData.prodiName);
     const tahunAjaran = printData.tahun_ajaran || settings?.tahun_ajaran_aktif;
-    const totalSks = printData.totalSks || 0;
-    const totalSksBobot = printData.totalSksBobot || 0;
-    const ips = printData.ips || 0;
+    const totalSks = Number(printData.totalSks || 0);
+    const totalSksBobot = Number(printData.totalSksBobot || 0);
+    const ips = Number(printData.ips || 0);
 
     const KAPRODI_MAP = {
       'D-III Nautika': { nama: 'Capt. Broto Priyono, S.SiT., M.T.', nip: '197908122008121002' },
@@ -1594,7 +1634,7 @@ export default function App() {
             ) : (
               printData.grades.map((g, idx) => {
                 const bobotVal = getBobot(g.nilai_huruf);
-                const bobotSksVal = (g.sks || 0) * bobotVal;
+                const bobotSksVal = (Number(g.sks) || 0) * bobotVal;
                 let predikat = 'Cukup';
                 if (g.nilai_huruf === 'A') predikat = 'Dengan Pujian';
                 else if (g.nilai_huruf?.startsWith('B')) predikat = 'Sangat Memuaskan';
@@ -1605,10 +1645,10 @@ export default function App() {
                   <tr key={idx}>
                     <td style={{ textAlign: 'center' }}>{idx + 1}</td>
                     <td>{g.nama_mk}</td>
-                    <td style={{ textAlign: 'center' }}>{g.sks || 0}</td>
-                    <td style={{ textAlign: 'center' }}>{g.nilai_akhir ? g.nilai_akhir.toFixed(1) : '-'}</td>
+                    <td style={{ textAlign: 'center' }}>{Number(g.sks) || 0}</td>
+                    <td style={{ textAlign: 'center' }}>{g.nilai_akhir !== null && g.nilai_akhir !== undefined ? Number(g.nilai_akhir).toFixed(1) : '-'}</td>
                     <td style={{ textAlign: 'center' }}>{g.nilai_huruf || '-'}</td>
-                    <td style={{ textAlign: 'center' }}>{bobotSksVal.toFixed(2)}</td>
+                    <td style={{ textAlign: 'center' }}>{Number(bobotSksVal).toFixed(2)}</td>
                     <td style={{ textAlign: 'center' }}>{predikat}</td>
                   </tr>
                 );
