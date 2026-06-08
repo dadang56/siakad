@@ -40,7 +40,17 @@ export default function App() {
   const [krsList, setKrsList] = useState(INITIAL_KRS);
   const [nilaiList, setNilaiList] = useState(INITIAL_NILAI);
   const [presensiList, setPresensiList] = useState(INITIAL_PRESENSI);
-  const [settings, setSettings] = useState(SETTINGS);
+  const [settings, setSettings] = useState(() => {
+    try {
+      const cached = localStorage.getItem('siakad_cached_settings');
+      if (cached) {
+        return JSON.parse(cached);
+      }
+    } catch (e) {
+      console.warn("Failed to parse cached settings:", e);
+    }
+    return SETTINGS;
+  });
 
   // Unified database tables states
   const [rawUsersList, setRawUsersList] = useState([]);
@@ -339,22 +349,30 @@ export default function App() {
           const appConfig = settingsData.find(s => s.key === 'app_config')?.value || {};
           const siakadConfig = settingsData.find(s => s.key === 'siakad_config')?.value || {};
 
-          setSettings(prev => ({
-            ...prev,
-            // 1. Sync fields with CAT (app_config)
-            logo_url: appConfig.logoUrl || prev.logo_url,
-            alamat_kampus: appConfig.address || prev.alamat_kampus,
-            telepon_kampus: appConfig.phone || prev.telepon_kampus,
-            email_kampus: appConfig.email || prev.email_kampus,
+          setSettings(prev => {
+            const next = {
+              ...prev,
+              // 1. Sync fields with CAT (app_config)
+              logo_url: appConfig.logoUrl || prev.logo_url,
+              alamat_kampus: appConfig.address || prev.alamat_kampus,
+              telepon_kampus: appConfig.phone || prev.telepon_kampus,
+              email_kampus: appConfig.email || prev.email_kampus,
 
-            // 2. Local fields (siakad_config)
-            nama_aplikasi: siakadConfig.nama_aplikasi || prev.nama_aplikasi,
-            sub_nama_aplikasi: siakadConfig.sub_nama_aplikasi || prev.sub_nama_aplikasi,
-            nama_kampus: siakadConfig.nama_kampus || appConfig.institution || prev.nama_kampus,
-            tahun_ajaran_aktif: siakadConfig.tahun_ajaran_aktif || prev.tahun_ajaran_aktif,
-            krs_open: siakadConfig.krs_open !== undefined ? siakadConfig.krs_open : prev.krs_open,
-            tarif_ukt: siakadConfig.tarif_ukt || prev.tarif_ukt
-          }));
+              // 2. Local fields (siakad_config)
+              nama_aplikasi: siakadConfig.nama_aplikasi || prev.nama_aplikasi,
+              sub_nama_aplikasi: siakadConfig.sub_nama_aplikasi || prev.sub_nama_aplikasi,
+              nama_kampus: siakadConfig.nama_kampus || appConfig.institution || prev.nama_kampus,
+              tahun_ajaran_aktif: siakadConfig.tahun_ajaran_aktif || prev.tahun_ajaran_aktif,
+              krs_open: siakadConfig.krs_open !== undefined ? siakadConfig.krs_open : prev.krs_open,
+              tarif_ukt: siakadConfig.tarif_ukt || prev.tarif_ukt
+            };
+            try {
+              localStorage.setItem('siakad_cached_settings', JSON.stringify(next));
+            } catch (e) {
+              console.warn("Failed to cache settings:", e);
+            }
+            return next;
+          });
         }
       } catch (err) {
         console.warn("Could not load settings from Supabase app_settings table:", err.message);
@@ -796,6 +814,11 @@ export default function App() {
   // Admin Master Settings
   const handleUpdateSettings = async (newSettings) => {
     setSettings(newSettings);
+    try {
+      localStorage.setItem('siakad_cached_settings', JSON.stringify(newSettings));
+    } catch (e) {
+      console.warn("Failed to cache settings:", e);
+    }
     
     try {
       // 1. Save to app_config (synchronized fields: Logo, Alamat, Telepon, Email)
