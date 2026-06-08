@@ -39,17 +39,7 @@ export default function App() {
   const [krsList, setKrsList] = useState(INITIAL_KRS);
   const [nilaiList, setNilaiList] = useState(INITIAL_NILAI);
   const [presensiList, setPresensiList] = useState(INITIAL_PRESENSI);
-  const [settings, setSettings] = useState(() => {
-    const saved = localStorage.getItem('siakad_settings');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error("Failed to parse saved settings", e);
-      }
-    }
-    return SETTINGS;
-  });
+  const [settings, setSettings] = useState(SETTINGS);
 
   // Unified database tables states
   const [rawUsersList, setRawUsersList] = useState([]);
@@ -335,6 +325,37 @@ export default function App() {
         }
       } catch (e) {
         console.warn("Could not load grades from hasil_ujian:", e.message);
+      }
+
+      // Fetch settings from app_settings Supabase table
+      try {
+        const { data: settingsData } = await supabase
+          .from('app_settings')
+          .select('key, value');
+
+        if (settingsData) {
+          const appConfig = settingsData.find(s => s.key === 'app_config')?.value || {};
+          const siakadConfig = settingsData.find(s => s.key === 'siakad_config')?.value || {};
+
+          setSettings(prev => ({
+            ...prev,
+            // 1. Sync fields with CAT (app_config)
+            logo_url: appConfig.logoUrl || prev.logo_url,
+            alamat_kampus: appConfig.address || prev.alamat_kampus,
+            telepon_kampus: appConfig.phone || prev.telepon_kampus,
+            email_kampus: appConfig.email || prev.email_kampus,
+
+            // 2. Local fields (siakad_config)
+            nama_aplikasi: siakadConfig.nama_aplikasi || prev.nama_aplikasi,
+            sub_nama_aplikasi: siakadConfig.sub_nama_aplikasi || prev.sub_nama_aplikasi,
+            nama_kampus: siakadConfig.nama_kampus || appConfig.institution || prev.nama_kampus,
+            tahun_ajaran_aktif: siakadConfig.tahun_ajaran_aktif || prev.tahun_ajaran_aktif,
+            krs_open: siakadConfig.krs_open !== undefined ? siakadConfig.krs_open : prev.krs_open,
+            tarif_ukt: siakadConfig.tarif_ukt || prev.tarif_ukt
+          }));
+        }
+      } catch (err) {
+        console.warn("Could not load settings from Supabase app_settings table:", err.message);
       }
 
     } catch (err) {
@@ -748,9 +769,64 @@ export default function App() {
   };
 
   // Admin Master Settings
-  const handleUpdateSettings = (newSettings) => {
+  const handleUpdateSettings = async (newSettings) => {
     setSettings(newSettings);
-    localStorage.setItem('siakad_settings', JSON.stringify(newSettings));
+    
+    try {
+      // 1. Save to app_config (synchronized fields: Logo, Alamat, Telepon, Email)
+      // Read latest app_config first to merge and avoid overwriting other fields used by CAT
+      const { data: currentAppConfig } = await supabase
+        .from('app_settings')
+        .select('*')
+        .eq('key', 'app_config')
+        .maybeSingle();
+
+      const latestAppVal = currentAppConfig?.value || {};
+      const updatedAppVal = {
+        ...latestAppVal,
+        logoUrl: newSettings.logo_url,
+        address: newSettings.alamat_kampus,
+        phone: newSettings.telepon_kampus,
+        email: newSettings.email_kampus
+      };
+
+      await supabase
+        .from('app_settings')
+        .upsert({
+          id: currentAppConfig?.id,
+          key: 'app_config',
+          value: updatedAppVal,
+          updated_at: new Date().toISOString()
+        });
+
+      // 2. Save to siakad_config (SIAKAD-specific local fields, including nama_kampus)
+      const { data: currentSiakadConfig } = await supabase
+        .from('app_settings')
+        .select('*')
+        .eq('key', 'siakad_config')
+        .maybeSingle();
+
+      const updatedSiakadVal = {
+        nama_aplikasi: newSettings.nama_aplikasi,
+        sub_nama_aplikasi: newSettings.sub_nama_aplikasi,
+        nama_kampus: newSettings.nama_kampus,
+        tahun_ajaran_aktif: newSettings.tahun_ajaran_aktif,
+        krs_open: newSettings.krs_open,
+        tarif_ukt: newSettings.tarif_ukt
+      };
+
+      await supabase
+        .from('app_settings')
+        .upsert({
+          id: currentSiakadConfig?.id,
+          key: 'siakad_config',
+          value: updatedSiakadVal,
+          updated_at: new Date().toISOString()
+        });
+
+    } catch (err) {
+      console.error("Gagal menyimpan pengaturan ke Supabase:", err);
+    }
   };
 
   // Admin CRUD Operations for Taruna
