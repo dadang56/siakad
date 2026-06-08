@@ -21,7 +21,9 @@ export default function Sidebar({
   activeMenu, 
   setActiveMenu, 
   onLogout,
-  settings
+  settings,
+  isOpen,
+  onMenuClick
 }) {
   
   // Menu definition based on role
@@ -82,7 +84,7 @@ export default function Sidebar({
   };
 
   return (
-    <aside className="app-sidebar">
+    <aside className={`app-sidebar ${isOpen ? 'open' : ''}`}>
       {/* Profile Section */}
       <div className="sidebar-profile">
         <div className="profile-avatar">
@@ -113,7 +115,10 @@ export default function Sidebar({
             return (
               <li key={item.id}>
                 <button
-                  onClick={() => setActiveMenu(item.id)}
+                  onClick={() => {
+                    setActiveMenu(item.id);
+                    if (onMenuClick) onMenuClick();
+                  }}
                   className={`menu-item ${activeMenu === item.id ? `active ${themeClass}` : ''}`}
                   style={{ width: '100%', background: 'none', border: 'none', textAlign: 'left' }}
                 >
@@ -129,7 +134,10 @@ export default function Sidebar({
       {/* Sidebar Footer */}
       <div className="sidebar-footer">
         <button 
-          onClick={onLogout}
+          onClick={() => {
+            onLogout();
+            if (onMenuClick) onMenuClick();
+          }}
           className="menu-item"
           style={{ width: '100%', background: 'none', border: 'none', color: 'var(--danger)', marginTop: 'auto', padding: '12px 16px' }}
         >

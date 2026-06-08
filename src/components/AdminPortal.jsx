@@ -1226,7 +1226,7 @@ export default function AdminPortal({
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '24px', alignItems: 'start' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', alignItems: 'start' }}>
             {/* Card 1: Pengaturan Akademik & Sistem */}
             <div className="glass-card glow-blue" style={{ margin: 0 }}>
               <div className="card-header-clean">
@@ -1571,7 +1571,7 @@ export default function AdminPortal({
                   </select>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="grid-2-cols-responsive">
                   <div className="form-group">
                     <label className="form-label">Semester:</label>
                     <input 
@@ -1620,7 +1620,7 @@ export default function AdminPortal({
                 </div>
 
                 {modalType === 'add' && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="grid-2-cols-responsive">
                     <div className="form-group">
                       <label className="form-label">IPK Terakhir:</label>
                       <input 
@@ -1765,7 +1765,7 @@ export default function AdminPortal({
                   />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="grid-2-cols-responsive">
                   <div className="form-group">
                     <label className="form-label">Bobot SKS:</label>
                     <input 
@@ -1994,7 +1994,7 @@ export default function AdminPortal({
                   </select>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="grid-2-cols-responsive">
                   <div className="form-group">
                     <label className="form-label">Angkatan:</label>
                     <input 
@@ -2102,7 +2102,7 @@ export default function AdminPortal({
                   </select>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="grid-2-cols-responsive">
                   <div className="form-group">
                     <label className="form-label">Jam Mulai:</label>
                     <input 

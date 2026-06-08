@@ -132,7 +132,7 @@ export default function KeuanganPortal({
           </div>
 
           {/* Prodi Summary Cards Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', marginBottom: '30px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '30px' }}>
             {prodiStats.map((p, index) => (
               <div 
                 key={index} 

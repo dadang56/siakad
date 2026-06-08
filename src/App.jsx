@@ -15,7 +15,7 @@ import DosenPortal from './components/DosenPortal';
 import AdminPortal from './components/AdminPortal';
 import KeuanganPortal from './components/KeuanganPortal';
 import Login from './components/Login';
-import { Anchor, ShieldAlert, Sparkles, User, Users, DollarSign } from 'lucide-react';
+import { Anchor, ShieldAlert, Sparkles, User, Users, DollarSign, Menu, X } from 'lucide-react';
 import { supabase } from './lib/supabase';
 
 const PRODI_MAP_TO_DB = {
@@ -65,6 +65,7 @@ export default function App() {
   const [adminProdiDept, setAdminProdiDept] = useState(''); 
   
   const [activeMenu, setActiveMenu] = useState('krs');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Reset menu when switching role
   useEffect(() => {
@@ -1251,6 +1252,7 @@ export default function App() {
     setActiveTarunaNim('');
     setActiveDosenNidn('');
     setAdminProdiDept('');
+    setIsSidebarOpen(false);
   };
 
   if (!isLoggedIn) {
@@ -1259,16 +1261,44 @@ export default function App() {
 
   return (
     <div className="app-container">
-      {/* Top Branding Header (Simulated switcher buttons removed) */}
-      <header className="role-switcher-bar" style={{ justifyContent: 'center' }}>
-        <div className="logo-container" style={{ marginRight: 0 }}>
+      {/* Top Branding Header */}
+      <header className="role-switcher-bar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px' }}>
+        {/* Toggle Button for Mobile Sidebar */}
+        <button
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="mobile-sidebar-toggle"
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--text-main)',
+            cursor: 'pointer',
+            padding: '8px',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {isSidebarOpen ? <X style={{ width: '20px', height: '20px' }} /> : <Menu style={{ width: '20px', height: '20px' }} />}
+        </button>
+
+        <div className="logo-container" style={{ 
+          position: 'absolute', 
+          left: '50%', 
+          transform: 'translateX(-50%)', 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '8px',
+          whiteSpace: 'nowrap'
+        }}>
           {settings.logo_url ? (
-            <img src={settings.logo_url} alt="Logo" style={{ height: '28px', objectFit: 'contain' }} />
+            <img src={settings.logo_url} alt="Logo" style={{ height: '24px', objectFit: 'contain' }} />
           ) : (
-            <Anchor className="logo-icon" />
+            <Anchor className="logo-icon" style={{ width: '18px', height: '18px' }} />
           )}
-          <span className="logo-text">{(settings.nama_aplikasi || 'SIAKAD')} {(settings.nama_kampus?.toUpperCase() || 'POLTEKTRANS SDP PALEMBANG')}</span>
+          <span className="logo-text" style={{ fontSize: '11px' }}>{(settings.nama_aplikasi || 'SIAKAD')} {(settings.nama_kampus?.toUpperCase() || 'POLTEKTRANS SDP PALEMBANG')}</span>
         </div>
+
+        {/* Spacer to balance flexbox layout on mobile */}
+        <div className="mobile-sidebar-toggle" style={{ width: '36px' }} />
       </header>
 
       {/* Sidebar Layout */}
@@ -1279,7 +1309,26 @@ export default function App() {
         setActiveMenu={setActiveMenu}
         onLogout={handleLogout}
         settings={settings}
+        isOpen={isSidebarOpen}
+        onMenuClick={() => setIsSidebarOpen(false)}
       />
+
+      {/* Backdrop overlay for mobile sidebar */}
+      {isSidebarOpen && (
+        <div 
+          onClick={() => setIsSidebarOpen(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 99,
+          }}
+        />
+      )}
 
       {/* Main Content Area */}
       <main className="app-content">

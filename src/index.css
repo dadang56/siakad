@@ -1135,3 +1135,32 @@ h1, h2, h3, h4, h5, h6 {
 .spin {
   animation: spin 1s linear infinite;
 }
+
+/* Responsive Grid utility for forms */
+.grid-2-cols-responsive {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .grid-2-cols-responsive {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* Mobile Sidebar Toggle Button */
+.mobile-sidebar-toggle {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .mobile-sidebar-toggle {
+    display: flex !important;
+  }
+  .app-sidebar.open {
+    transform: translateX(0);
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.6);
+  }
+}

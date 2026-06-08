@@ -645,7 +645,7 @@ export default function DosenPortal({
                 <button onClick={() => setSelectedKrsToReview(null)} className="btn-close">✕</button>
               </div>
               <div className="modal-body">
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', fontSize: '13px', marginBottom: '20px', paddingBottom: '12px', borderBottom: '1px solid var(--glass-border)' }}>
+                <div className="grid-2-cols-responsive" style={{ fontSize: '13px', marginBottom: '20px', paddingBottom: '12px', borderBottom: '1px solid var(--glass-border)' }}>
                   <div>NIM: <strong>{student?.nim}</strong></div>
                   <div>IPK Kumulatif: <strong>{student?.ipk}</strong></div>
                   <div>Prodi: <strong>{student?.prodi}</strong></div>
