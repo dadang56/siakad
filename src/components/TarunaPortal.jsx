@@ -4,6 +4,7 @@ import {
   BookOpen, 
   Calendar, 
   CheckCircle, 
+  CheckSquare,
   CreditCard, 
   Download, 
   FileText, 

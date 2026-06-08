@@ -335,33 +335,6 @@ export default function AdminPortal({
     setShowMkModal(false);
   };
 
-  // 4. Disciplinary Points
-  const handleAddPoinSubmit = (e) => {
-    e.preventDefault();
-    if (!selectedTarunaNim) {
-      alert("Pilih Mahasiswa terlebih dahulu.");
-      return;
-    }
-    if (!poinDesc) {
-      alert("Masukkan deskripsi pelanggaran / prestasi.");
-      return;
-    }
-
-    const value = poinType === 'pelanggaran' ? -Math.abs(poinVal) : Math.abs(poinVal);
-    onAddPoin(selectedTarunaNim, {
-      id: Date.now(),
-      tanggal: new Date().toISOString().split('T')[0],
-      jenis: poinType,
-      poin: value,
-      keterangan: poinDesc
-    });
-
-    setPoinDesc('');
-    alert("Catatan Poin Ketarunaan berhasil ditambahkan!");
-  };
-
-  // Selected Taruna profile for points
-  const selectedTaruna = tarunaList.find(t => t.nim === selectedTarunaNim);
 
   // 5. Save settings
   const handleSaveSettings = () => {
@@ -1172,7 +1145,7 @@ export default function AdminPortal({
                                 <td style={{ textAlign: 'center' }}>{g.praktek}</td>
                                 <td style={{ textAlign: 'center', fontWeight: 'bold', color: 'var(--accent)' }}>{g.nilai_akhir?.toFixed(1)}</td>
                                 <td style={{ textAlign: 'center' }}>
-                                  <span className={`badge ${g.nilai_huruf === 'A' ? 'badge-success' : g.nilai_huruf.startsWith('B') ? 'badge-primary' : 'badge-warning'}`}>
+                                  <span className={`badge ${g.nilai_huruf === 'A' ? 'badge-success' : g.nilai_huruf?.startsWith('B') ? 'badge-primary' : 'badge-warning'}`}>
                                     {g.nilai_huruf}
                                   </span>
                                 </td>
