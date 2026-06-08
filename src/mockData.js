@@ -993,5 +993,6 @@ export const SETTINGS = {
   nama_kampus: "Politeknik Transportasi SDP Palembang",
   alamat_kampus: "Jl. Residen Abdul Rozak, Palembang",
   telepon_kampus: "(0711) 712345",
-  email_kampus: "info@poltektrans.ac.id"
+  email_kampus: "info@poltektrans.ac.id",
+  logo_url: ""
 };

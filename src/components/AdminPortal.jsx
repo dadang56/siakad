@@ -1295,6 +1295,54 @@ export default function AdminPortal({
                 <h3 className="card-title"><Building2 /> Identitas & Informasi Kampus</h3>
               </div>
 
+              {/* Logo Upload Section */}
+              <div className="form-group" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: 'var(--radius-sm)', border: '1px dashed var(--glass-border)' }}>
+                <label className="form-label" style={{ alignSelf: 'flex-start', marginBottom: '12px' }}>Logo Kampus:</label>
+                {tempSettings.logo_url ? (
+                  <div style={{ position: 'relative', width: '120px', height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <img src={tempSettings.logo_url} alt="Logo Kampus" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', background: '#fff', padding: '8px', borderRadius: 'var(--radius-sm)' }} />
+                    {currentRole !== 'admin_prodi' && (
+                      <button 
+                        type="button" 
+                        onClick={() => setTempSettings({ ...tempSettings, logo_url: '' })} 
+                        style={{ position: 'absolute', top: '-8px', right: '-8px', background: 'var(--danger)', color: '#fff', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px' }}
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div 
+                    onClick={() => { if (currentRole !== 'admin_prodi') document.getElementById('logo-upload-input').click() }}
+                    style={{ width: '120px', height: '120px', border: '2px dashed var(--glass-border)', borderRadius: 'var(--radius-sm)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: currentRole === 'admin_prodi' ? 'default' : 'pointer', color: 'var(--text-muted)' }}
+                  >
+                    <Plus style={{ width: '24px', height: '24px', marginBottom: '4px' }} />
+                    <span style={{ fontSize: '10px' }}>Upload Logo</span>
+                  </div>
+                )}
+                <input 
+                  id="logo-upload-input"
+                  type="file"
+                  accept="image/png, image/jpeg, image/jpg"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      if (file.size > 2 * 1024 * 1024) {
+                        alert('Ukuran file maksimal 2MB');
+                        return;
+                      }
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setTempSettings({ ...tempSettings, logo_url: reader.result });
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  style={{ display: 'none' }}
+                />
+                <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '8px' }}>Format: PNG/JPG (Max 2MB)</span>
+              </div>
+
               <div className="form-group">
                 <label className="form-label">Nama Kampus:</label>
                 <input 

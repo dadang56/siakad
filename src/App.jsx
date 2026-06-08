@@ -1072,7 +1072,11 @@ export default function App() {
       {/* Role Switcher Bar - Floating Header */}
       <header className="role-switcher-bar">
         <div className="logo-container">
-          <Anchor className="logo-icon" />
+          {settings.logo_url ? (
+            <img src={settings.logo_url} alt="Logo" style={{ height: '28px', objectFit: 'contain' }} />
+          ) : (
+            <Anchor className="logo-icon" />
+          )}
           <span className="logo-text">{(settings.nama_aplikasi || 'SIAKAD')} {(settings.nama_kampus?.toUpperCase() || 'POLTEKTRANS SDP PALEMBANG')}</span>
         </div>
         
