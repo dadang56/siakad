@@ -39,7 +39,17 @@ export default function App() {
   const [krsList, setKrsList] = useState(INITIAL_KRS);
   const [nilaiList, setNilaiList] = useState(INITIAL_NILAI);
   const [presensiList, setPresensiList] = useState(INITIAL_PRESENSI);
-  const [settings, setSettings] = useState(SETTINGS);
+  const [settings, setSettings] = useState(() => {
+    const saved = localStorage.getItem('siakad_settings');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error("Failed to parse saved settings", e);
+      }
+    }
+    return SETTINGS;
+  });
 
   // Unified database tables states
   const [rawUsersList, setRawUsersList] = useState([]);
@@ -740,6 +750,7 @@ export default function App() {
   // Admin Master Settings
   const handleUpdateSettings = (newSettings) => {
     setSettings(newSettings);
+    localStorage.setItem('siakad_settings', JSON.stringify(newSettings));
   };
 
   // Admin CRUD Operations for Taruna
