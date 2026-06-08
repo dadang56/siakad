@@ -23,6 +23,7 @@ export default function KeuanganPortal({
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [prodiFilter, setProdiFilter] = useState('all');
+  const [kelasFilter, setKelasFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
 
   const [tarifMahasiswa, setTarifMahasiswa] = useState(settings.tarif_ukt || 0);
@@ -77,15 +78,23 @@ export default function KeuanganPortal({
   const totalLunas = tarunaList.filter(t => t.status_ukt === 'Lunas').length;
   const totalBelumLunas = totalTaruna - totalLunas;
 
+  // Get unique classes for filter
+  const classList = Array.from(new Set(tarunaList.map(t => t.kelas).filter(Boolean))).sort();
+
   // Filter Taruna list
   const filteredTarunas = tarunaList.filter(t => {
     const matchesSearch = t.nama.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           t.nim.includes(searchTerm);
     const matchesProdi = prodiFilter === 'all' || t.prodi === prodiFilter;
+    const matchesKelas = kelasFilter === 'all' || t.kelas === kelasFilter;
     const matchesStatus = statusFilter === 'all' || 
                           (statusFilter === 'Lunas' && t.status_ukt === 'Lunas') ||
                           (statusFilter === 'Belum Lunas' && t.status_ukt !== 'Lunas');
-    return matchesSearch && matchesProdi && matchesStatus;
+    return matchesSearch && matchesProdi && matchesStatus && matchesKelas;
+  });
+
+  const sortedTarunas = [...filteredTarunas].sort((a, b) => {
+    return (a.nim || '').localeCompare(b.nim || '', undefined, { numeric: true, sensitivity: 'base' });
   });
 
   const handleOpenEdit = (t) => {
@@ -240,6 +249,20 @@ export default function KeuanganPortal({
                 </select>
               </div>
 
+              <div className="select-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Filter style={{ width: '14px', color: 'var(--text-muted)' }} />
+                <select 
+                  value={kelasFilter} 
+                  onChange={(e) => setKelasFilter(e.target.value)}
+                  style={{ padding: '10px', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-main)' }}
+                >
+                  <option value="all">Semua Kelas</option>
+                  {classList.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+
               <select 
                 value={statusFilter} 
                 onChange={(e) => setStatusFilter(e.target.value)}
@@ -268,19 +291,19 @@ export default function KeuanganPortal({
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredTarunas.length === 0 ? (
+                  {sortedTarunas.length === 0 ? (
                     <tr>
                       <td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
                         Tidak ada data mahasiswa yang sesuai dengan filter pencarian.
                       </td>
                     </tr>
                   ) : (
-                    filteredTarunas.map((t) => (
+                    sortedTarunas.map((t) => (
                       <tr key={t.nim}>
                         <td>
                           <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <strong>{t.nama}</strong>
-                            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>NIM: {t.nim}</span>
+                            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>NIM: {t.nim} {t.kelas ? `| Kelas: ${t.kelas}` : ''}</span>
                           </div>
                         </td>
                         <td>{t.prodi}</td>
