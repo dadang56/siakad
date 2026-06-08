@@ -1225,116 +1225,128 @@ export default function AdminPortal({
             </div>
           </div>
 
-          <div className="glass-card glow-blue" style={{ maxWidth: '600px' }}>
-            <div className="card-header-clean">
-              <h3 className="card-title"><SettingsIcon /> Pengaturan Global</h3>
-            </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '24px', alignItems: 'start' }}>
+            {/* Card 1: Pengaturan Akademik & Sistem */}
+            <div className="glass-card glow-blue" style={{ margin: 0 }}>
+              <div className="card-header-clean">
+                <h3 className="card-title"><SettingsIcon /> Pengaturan Akademik & Sistem</h3>
+              </div>
 
-            <div className="form-group">
-              <label className="form-label">Tahun Ajaran / Semester Aktif:</label>
-              <input 
-                type="text" 
-                value={tempSettings.tahun_ajaran_aktif} 
-                onChange={(e) => setTempSettings({ ...tempSettings, tahun_ajaran_aktif: e.target.value })}
-                className="form-control"
-                disabled={currentRole === 'admin_prodi'}
-              />
-            </div>
+              <div className="form-group">
+                <label className="form-label">Tahun Ajaran / Semester Aktif:</label>
+                <input 
+                  type="text" 
+                  value={tempSettings.tahun_ajaran_aktif} 
+                  onChange={(e) => setTempSettings({ ...tempSettings, tahun_ajaran_aktif: e.target.value })}
+                  className="form-control"
+                  disabled={currentRole === 'admin_prodi'}
+                />
+              </div>
 
-            <div className="form-group">
-              <label className="form-label">Masa Pengisian KRS Online:</label>
-              <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
-                <button 
-                  onClick={() => { if (currentRole !== 'admin_prodi') setTempSettings({ ...tempSettings, krs_open: true }) }}
-                  className={`btn ${tempSettings.krs_open ? 'btn-primary' : 'btn-secondary'}`}
-                  style={{ flex: 1 }}
+              <div className="form-group">
+                <label className="form-label">Masa Pengisian KRS Online:</label>
+                <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+                  <button 
+                    onClick={() => { if (currentRole !== 'admin_prodi') setTempSettings({ ...tempSettings, krs_open: true }) }}
+                    className={`btn ${tempSettings.krs_open ? 'btn-primary' : 'btn-secondary'}`}
+                    style={{ flex: 1 }}
+                    disabled={currentRole === 'admin_prodi'}
+                  >
+                    <Check className="menu-icon" /> Buka Periode KRS
+                  </button>
+                  <button 
+                    onClick={() => { if (currentRole !== 'admin_prodi') setTempSettings({ ...tempSettings, krs_open: false }) }}
+                    className={`btn ${!tempSettings.krs_open ? 'btn-danger' : 'btn-secondary'}`}
+                    style={{ flex: 1 }}
+                    disabled={currentRole === 'admin_prodi'}
+                  >
+                    ✕ Tutup Periode KRS
+                  </button>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Nama Aplikasi:</label>
+                <input 
+                  type="text" 
+                  value={tempSettings.nama_aplikasi || ''} 
+                  onChange={(e) => setTempSettings({ ...tempSettings, nama_aplikasi: e.target.value })}
+                  className="form-control"
                   disabled={currentRole === 'admin_prodi'}
-                >
-                  <Check className="menu-icon" /> Buka Periode KRS
-                </button>
-                <button 
-                  onClick={() => { if (currentRole !== 'admin_prodi') setTempSettings({ ...tempSettings, krs_open: false }) }}
-                  className={`btn ${!tempSettings.krs_open ? 'btn-danger' : 'btn-secondary'}`}
-                  style={{ flex: 1 }}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Sub Nama Aplikasi:</label>
+                <input 
+                  type="text" 
+                  value={tempSettings.sub_nama_aplikasi || ''} 
+                  onChange={(e) => setTempSettings({ ...tempSettings, sub_nama_aplikasi: e.target.value })}
+                  className="form-control"
                   disabled={currentRole === 'admin_prodi'}
-                >
-                  ✕ Tutup Periode KRS
-                </button>
+                />
               </div>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Nama Aplikasi:</label>
-              <input 
-                type="text" 
-                value={tempSettings.nama_aplikasi || ''} 
-                onChange={(e) => setTempSettings({ ...tempSettings, nama_aplikasi: e.target.value })}
-                className="form-control"
-                disabled={currentRole === 'admin_prodi'}
-              />
-            </div>
+            {/* Card 2: Identitas & Informasi Kampus */}
+            <div className="glass-card glow-gold" style={{ margin: 0 }}>
+              <div className="card-header-clean">
+                <h3 className="card-title"><Building2 /> Identitas & Informasi Kampus</h3>
+              </div>
 
-            <div className="form-group">
-              <label className="form-label">Sub Nama Aplikasi:</label>
-              <input 
-                type="text" 
-                value={tempSettings.sub_nama_aplikasi || ''} 
-                onChange={(e) => setTempSettings({ ...tempSettings, sub_nama_aplikasi: e.target.value })}
-                className="form-control"
-                disabled={currentRole === 'admin_prodi'}
-              />
-            </div>
+              <div className="form-group">
+                <label className="form-label">Nama Kampus:</label>
+                <input 
+                  type="text" 
+                  value={tempSettings.nama_kampus || ''} 
+                  onChange={(e) => setTempSettings({ ...tempSettings, nama_kampus: e.target.value })}
+                  className="form-control"
+                  disabled={currentRole === 'admin_prodi'}
+                />
+              </div>
 
-            <div className="form-group">
-              <label className="form-label">Nama Kampus:</label>
-              <input 
-                type="text" 
-                value={tempSettings.nama_kampus || ''} 
-                onChange={(e) => setTempSettings({ ...tempSettings, nama_kampus: e.target.value })}
-                className="form-control"
-                disabled={currentRole === 'admin_prodi'}
-              />
-            </div>
+              <div className="form-group">
+                <label className="form-label">Alamat Kampus:</label>
+                <input 
+                  type="text" 
+                  value={tempSettings.alamat_kampus || ''} 
+                  onChange={(e) => setTempSettings({ ...tempSettings, alamat_kampus: e.target.value })}
+                  className="form-control"
+                  disabled={currentRole === 'admin_prodi'}
+                />
+              </div>
 
-            <div className="form-group">
-              <label className="form-label">Alamat Kampus:</label>
-              <input 
-                type="text" 
-                value={tempSettings.alamat_kampus || ''} 
-                onChange={(e) => setTempSettings({ ...tempSettings, alamat_kampus: e.target.value })}
-                className="form-control"
-                disabled={currentRole === 'admin_prodi'}
-              />
-            </div>
+              <div className="form-group">
+                <label className="form-label">Telepon Kampus:</label>
+                <input 
+                  type="text" 
+                  value={tempSettings.telepon_kampus || ''} 
+                  onChange={(e) => setTempSettings({ ...tempSettings, telepon_kampus: e.target.value })}
+                  className="form-control"
+                  disabled={currentRole === 'admin_prodi'}
+                />
+              </div>
 
-            <div className="form-group">
-              <label className="form-label">Telepon Kampus:</label>
-              <input 
-                type="text" 
-                value={tempSettings.telepon_kampus || ''} 
-                onChange={(e) => setTempSettings({ ...tempSettings, telepon_kampus: e.target.value })}
-                className="form-control"
-                disabled={currentRole === 'admin_prodi'}
-              />
+              <div className="form-group">
+                <label className="form-label">Email Kampus:</label>
+                <input 
+                  type="text" 
+                  value={tempSettings.email_kampus || ''} 
+                  onChange={(e) => setTempSettings({ ...tempSettings, email_kampus: e.target.value })}
+                  className="form-control"
+                  disabled={currentRole === 'admin_prodi'}
+                />
+              </div>
             </div>
-
-            <div className="form-group">
-              <label className="form-label">Email Kampus:</label>
-              <input 
-                type="text" 
-                value={tempSettings.email_kampus || ''} 
-                onChange={(e) => setTempSettings({ ...tempSettings, email_kampus: e.target.value })}
-                className="form-control"
-                disabled={currentRole === 'admin_prodi'}
-              />
-            </div>
-
-            {currentRole !== 'admin_prodi' && (
-              <button onClick={handleSaveSettings} className="btn btn-success" style={{ width: '100%', marginTop: '12px' }}>
-                <Save className="menu-icon" /> Simpan Pengaturan
-              </button>
-            )}
           </div>
+
+          {currentRole !== 'admin_prodi' && (
+            <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
+              <button onClick={handleSaveSettings} className="btn btn-success" style={{ minWidth: '220px', padding: '12px' }}>
+                <Save className="menu-icon" /> Simpan Semua Pengaturan
+              </button>
+            </div>
+          )}
         </div>
       )}
 
