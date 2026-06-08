@@ -1552,74 +1552,69 @@ export default function App() {
         </table>
         
         {/* Footer Section (Indices & Signatures) */}
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '55px' }}>
+        {/* Footer Section (Indices & Signatures) */}
+        
+        {/* 1. Indices Box */}
+        <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-start' }}>
+          <div style={{ border: '1px solid #000', padding: '6px 10px', width: '270px', fontSize: '9pt' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '2px 0', fontWeight: 'bold', fontSize: '8.5pt' }}>INDEKS PRESTASI SEMESTER (IPS)</td>
+                  <td style={{ width: '15px', textAlign: 'center' }}>:</td>
+                  <td style={{ padding: '2px 0', width: '45px', textAlign: 'right', fontWeight: 'bold', fontSize: '8.5pt' }}>{ips.toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: '2px 0', fontSize: '8.5pt' }}>NILAI KONDITE (NK)</td>
+                  <td style={{ textAlign: 'center' }}>:</td>
+                  <td style={{ padding: '2px 0', textAlign: 'right', fontSize: '8.5pt' }}>0.00</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: '2px 0', fontSize: '8.5pt' }}>NILAI KESAMAPTAAN (NS)</td>
+                  <td style={{ textAlign: 'center' }}>:</td>
+                  <td style={{ padding: '2px 0', textAlign: 'right', fontSize: '8.5pt' }}>0.00</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: '2px 0', fontSize: '8.5pt' }}>PERINGKAT AKHIR SEMESTER (PAS)</td>
+                  <td style={{ textAlign: 'center' }}>:</td>
+                  <td style={{ padding: '2px 0', textAlign: 'right', fontSize: '8.5pt' }}>0.00</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* 2. Date Row */}
+        <div style={{ textAlign: 'right', marginTop: '25px', marginBottom: '10px', fontSize: '9.5pt', paddingRight: '40px' }}>
+          Palembang, {formattedDate}
+        </div>
+
+        {/* 3. Signatures Section (Full Width, Centered Columns) */}
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9.5pt' }}>
           <tbody>
+            {/* Row 1: Signatures Titles */}
             <tr>
-              {/* Indices Box */}
-              <td style={{ width: '270px', verticalAlign: 'top' }}>
-                <div style={{ border: '1px solid #000', padding: '6px 10px', fontSize: '9pt' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <tbody>
-                      <tr>
-                        <td style={{ padding: '2px 0', fontWeight: 'bold', fontSize: '8.5pt' }}>INDEKS PRESTASI SEMESTER (IPS)</td>
-                        <td style={{ width: '15px', textAlign: 'center' }}>:</td>
-                        <td style={{ padding: '2px 0', width: '45px', textAlign: 'right', fontWeight: 'bold', fontSize: '8.5pt' }}>{ips.toFixed(2)}</td>
-                      </tr>
-                      <tr>
-                        <td style={{ padding: '2px 0', fontSize: '8.5pt' }}>NILAI KONDITE (NK)</td>
-                        <td style={{ textAlign: 'center' }}>:</td>
-                        <td style={{ padding: '2px 0', textAlign: 'right', fontSize: '8.5pt' }}>0.00</td>
-                      </tr>
-                      <tr>
-                        <td style={{ padding: '2px 0', fontSize: '8.5pt' }}>NILAI KESAMAPTAAN (NS)</td>
-                        <td style={{ textAlign: 'center' }}>:</td>
-                        <td style={{ padding: '2px 0', textAlign: 'right', fontSize: '8.5pt' }}>0.00</td>
-                      </tr>
-                      <tr>
-                        <td style={{ padding: '2px 0', fontSize: '8.5pt' }}>PERINGKAT AKHIR SEMESTER (PAS)</td>
-                        <td style={{ textAlign: 'center' }}>:</td>
-                        <td style={{ padding: '2px 0', textAlign: 'right', fontSize: '8.5pt' }}>0.00</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+              <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'top', lineHeight: '1.2' }}>
+                <div>Mengetahui,</div>
+                <div>KEPALA BAGIAN ADMINISTRASI</div>
+                <div>AKADEMIK</div>
+                <div>DAN KETARUNAAN</div>
               </td>
-              {/* Spacer */}
-              <td style={{ width: '40px' }}></td>
-              {/* Signatures */}
-              <td style={{ verticalAlign: 'top' }}>
-                <div style={{ textAlign: 'right', marginBottom: '10px', fontSize: '9.5pt', paddingRight: '40px' }}>
-                  Palembang, {formattedDate}
-                </div>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9.5pt' }}>
-                  <tbody>
-                    {/* Row 1: Signatures Titles */}
-                    <tr>
-                      <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'top', lineHeight: '1.2' }}>
-                        <div>Mengetahui,</div>
-                        <div>KEPALA BAGIAN ADMINISTRASI</div>
-                        <div>AKADEMIK</div>
-                        <div>DAN KETARUNAAN</div>
-                      </td>
-                      <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'top', lineHeight: '1.2' }}>
-                        <div>&nbsp;</div>
-                        <div>KETUA PROGRAM STUDI</div>
-                        <div>{prodiNameCleaned}</div>
-                      </td>
-                    </tr>
-                    {/* Row 2: Signatures Names & NIPs (Perfect Baseline Alignment) */}
-                    <tr>
-                      <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'top', paddingTop: '55px', lineHeight: '1.2' }}>
-                        <div><u><strong>{settings?.pejabat_akademik || 'Kodrat Alam, S.SiT., MT.'}</strong></u></div>
-                        <div>NIP. {settings?.nip_pejabat_akademik || '197806292000031001'}</div>
-                      </td>
-                      <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'top', paddingTop: '55px', lineHeight: '1.2' }}>
-                        <div><u><strong>{kaprodi.nama}</strong></u></div>
-                        <div>NIP. {kaprodi.nip}</div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+              <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'top', lineHeight: '1.2' }}>
+                <div>&nbsp;</div>
+                <div>KETUA PROGRAM STUDI</div>
+                <div>{prodiNameCleaned}</div>
+              </td>
+            </tr>
+            {/* Row 2: Signatures Names & NIPs (Perfect Baseline Alignment) */}
+            <tr>
+              <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'top', paddingTop: '55px', lineHeight: '1.2' }}>
+                <div><u><strong>{settings?.pejabat_akademik || 'Kodrat Alam, S.SiT., MT.'}</strong></u></div>
+                <div>NIP. {settings?.nip_pejabat_akademik || '197806292000031001'}</div>
+              </td>
+              <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'top', paddingTop: '55px', lineHeight: '1.2' }}>
+                <div><u><strong>{kaprodi.nama}</strong></u></div>
+                <div>NIP. {kaprodi.nip}</div>
               </td>
             </tr>
           </tbody>
