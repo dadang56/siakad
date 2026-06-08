@@ -66,7 +66,6 @@ export default function App() {
   
   const [activeMenu, setActiveMenu] = useState('krs');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [khsPrintData, setKhsPrintData] = useState(null);
 
   const getBobot = (grade) => {
     if (!grade) return 0;
@@ -89,16 +88,376 @@ export default function App() {
       'D-III Manajemen Transportasi Perairan Daratan (MTPD)': { nama: 'Siti Nurlaili Triwahyuni, M.Sc.', nip: '198204152010122003' }
     };
     
-    const resolvedPrintObj = {
-      ...printObj,
-      kaprodi: KAPRODI_MAP[printObj.prodiName] || { nama: '-', nip: '-' }
+    const kaprodi = KAPRODI_MAP[printObj.prodiName] || { nama: '-', nip: '-' };
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert("Popup blocker menghalangi pencetakan. Harap izinkan popup untuk situs ini.");
+      return;
+    }
+
+    const cleanProdiName = (name) => {
+      if (!name) return '';
+      return name.replace(/^D-III\s+/i, '').toUpperCase();
     };
+
+    const studentName = printObj.student.nama?.toUpperCase() || '';
+    const studentNim = printObj.student.nim_nip || '';
+    const angkatan = printObj.angkatan || '36';
+    const semester = printObj.semester || 1;
+    const prodiNameCleaned = cleanProdiName(printObj.prodiName);
+    const tahunAjaran = printObj.tahun_ajaran || settings.tahun_ajaran_aktif;
     
-    setKhsPrintData(resolvedPrintObj);
-    setTimeout(() => {
-      window.print();
-      setKhsPrintData(null);
-    }, 150);
+    // Build grades rows
+    let gradesHtml = '';
+    if (!printObj.grades || printObj.grades.length === 0) {
+      gradesHtml = `
+        <tr>
+          <td colspan="7" style="text-align: center; padding: 12px; font-family: 'Times New Roman', serif; border: 1px solid #000;">Belum ada nilai</td>
+        </tr>
+      `;
+    } else {
+      printObj.grades.forEach((g, idx) => {
+        const bobotVal = getBobot(g.nilai_huruf);
+        const bobotSksVal = (g.sks || 0) * bobotVal;
+        let predikat = 'Cukup';
+        if (g.nilai_huruf === 'A') predikat = 'Dengan Pujian';
+        else if (g.nilai_huruf?.startsWith('B')) predikat = 'Sangat Memuaskan';
+        else if (g.nilai_huruf?.startsWith('C')) predikat = 'Memuaskan';
+        else if (g.nilai_huruf === 'D') predikat = 'Kurang';
+        else if (g.nilai_huruf === 'E') predikat = 'Gagal';
+        
+        gradesHtml += `
+          <tr style="font-family: 'Times New Roman', serif;">
+            <td style="text-align: center; border: 1px solid #000; padding: 6px 8px;">${idx + 1}</td>
+            <td style="border: 1px solid #000; padding: 6px 8px;">${g.nama_mk || 'Mata Kuliah'}</td>
+            <td style="text-align: center; border: 1px solid #000; padding: 6px 8px;">${g.sks || 0}</td>
+            <td style="text-align: center; border: 1px solid #000; padding: 6px 8px;">${g.nilai_akhir ? g.nilai_akhir.toFixed(1) : '-'}</td>
+            <td style="text-align: center; border: 1px solid #000; padding: 6px 8px;">${g.nilai_huruf || '-'}</td>
+            <td style="text-align: center; border: 1px solid #000; padding: 6px 8px;">${bobotSksVal.toFixed(2)}</td>
+            <td style="text-align: center; border: 1px solid #000; padding: 6px 8px;">${predikat}</td>
+          </tr>
+        `;
+      });
+    }
+    
+    const totalSks = printObj.totalSks || 0;
+    const totalSksBobot = printObj.totalSksBobot || 0;
+    const ips = printObj.ips || 0;
+    
+    const logoUrl = settings.logo_url || '';
+    const logoImg = logoUrl 
+      ? `<img src="${logoUrl}" style="height: 80px; width: auto; object-fit: contain;" alt="Logo" />`
+      : `<div style="width: 80px; height: 80px; border: 1px solid #000; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 24px; font-family: 'Times New Roman', serif;">S</div>`;
+      
+    const formattedDate = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>KHS - ${studentName}</title>
+          <style>
+            @media print {
+              @page {
+                size: portrait;
+                margin: 15mm 15mm 15mm 15mm;
+              }
+              body {
+                background: white !important;
+                color: black !important;
+              }
+            }
+            body {
+              font-family: 'Times New Roman', Times, serif;
+              color: #000;
+              background-color: #fff;
+              margin: 0;
+              padding: 10px;
+              font-size: 10pt;
+              line-height: 1.3;
+            }
+            .header-container {
+              display: flex;
+              align-items: center;
+              gap: 20px;
+              margin-bottom: 10px;
+            }
+            .header-logo {
+              flex-shrink: 0;
+            }
+            .header-text {
+              flex-grow: 1;
+              text-align: center;
+            }
+            .univ-name {
+              font-size: 13pt;
+              font-weight: bold;
+              margin: 0 0 4px 0;
+            }
+            .univ-info {
+              font-size: 8.5pt;
+              margin: 0 0 2px 0;
+            }
+            .double-line {
+              border-top: 3px double #000;
+              margin-bottom: 15px;
+            }
+            .doc-title {
+              text-align: center;
+              font-size: 12pt;
+              font-weight: bold;
+              text-decoration: underline;
+              margin-bottom: 15px;
+              letter-spacing: 0.5px;
+            }
+            .info-grid {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 15px;
+            }
+            .info-left {
+              flex: 1;
+            }
+            .info-right {
+              width: 240px;
+              flex-shrink: 0;
+            }
+            .info-table {
+              border-collapse: collapse;
+              width: 100%;
+            }
+            .info-table td {
+              padding: 2px 4px;
+              font-size: 9.5pt;
+              vertical-align: top;
+            }
+            .info-table td.label {
+              width: 150px;
+              font-weight: 500;
+            }
+            .catatan-box {
+              border: 1px solid #000;
+              padding: 6px 10px;
+              font-size: 8pt;
+            }
+            .catatan-title {
+              font-weight: bold;
+              margin-bottom: 2px;
+            }
+            .grades-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 15px;
+              font-size: 9.5pt;
+            }
+            .grades-table th {
+              border: 1px solid #000;
+              padding: 6px 4px;
+              font-weight: bold;
+              text-align: center;
+              font-size: 9pt;
+            }
+            .grades-table td {
+              border: 1px solid #000;
+              padding: 5px 6px;
+            }
+            .grades-table tfoot td {
+              font-weight: bold;
+              border-top: 2px double #000 !important;
+            }
+            .footer-container {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              margin-top: 15px;
+            }
+            .indices-box {
+              border: 1px solid #000;
+              padding: 6px 10px;
+              width: 260px;
+              font-size: 9pt;
+            }
+            .indices-table {
+              width: 100%;
+              border-collapse: collapse;
+            }
+            .indices-table td {
+              padding: 2px 0;
+            }
+            .indices-table td.label {
+              width: 190px;
+            }
+            .signatures-box {
+              width: 500px;
+              display: flex;
+              flex-direction: column;
+              align-items: flex-end;
+              font-size: 9.5pt;
+            }
+            .date-row {
+              margin-bottom: 10px;
+              padding-right: 40px;
+            }
+            .sigs-row {
+              display: flex;
+              justify-content: space-between;
+              width: 100%;
+            }
+            .sig-col {
+              width: 48%;
+              text-align: center;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+            }
+            .sig-space {
+              height: 55px;
+            }
+            .sig-name {
+              font-weight: bold;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header-container">
+            <div class="header-logo">
+              ${logoImg}
+            </div>
+            <div class="header-text">
+              <h2 class="univ-name">${settings.nama_kampus?.toUpperCase() || 'POLITEKNIK TRANSPORTASI SUNGAI, DANAU DAN PENYEBERANGAN PALEMBANG'}</h2>
+              <p class="univ-info">${settings.alamat_kampus || 'Jl. Sabar Jaya No 116, Mariana, Kec. Banyuasin I, Kab. Banyuasin, Sumatera Selatan 30962'}</p>
+              <p class="univ-info">Telp: ${settings.telepon_kampus || '(0711) 712345'} | Email: ${settings.email_kampus || 'info@poltektrans.ac.id'}</p>
+            </div>
+          </div>
+          <div class="double-line"></div>
+          
+          <h3 class="doc-title">KARTU HASIL STUDI (KHS)</h3>
+          
+          <div class="info-grid">
+            <div class="info-left">
+              <table class="info-table">
+                <tbody>
+                  <tr>
+                    <td class="label">TAHUN AKADEMIK</td>
+                    <td>: ${tahunAjaran}</td>
+                  </tr>
+                  <tr>
+                    <td class="label">NAMA TARUNA</td>
+                    <td>: ${studentName}</td>
+                  </tr>
+                  <tr>
+                    <td class="label">NOMOR TARUNA</td>
+                    <td>: ${studentNim}</td>
+                  </tr>
+                  <tr>
+                    <td class="label">ANGKATAN</td>
+                    <td>: Angkatan ${angkatan}</td>
+                  </tr>
+                  <tr>
+                    <td class="label">TINGKAT/SEMESTER</td>
+                    <td>: Semester ${semester}</td>
+                  </tr>
+                  <tr>
+                    <td class="label">PROGRAM STUDI</td>
+                    <td>: ${prodiNameCleaned}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="info-right">
+              <div class="catatan-box">
+                <div class="catatan-title">Catatan:</div>
+                <div>Lembar 1 : Taruna Ybs</div>
+                <div>Lembar 2 : Orang Tua Taruna Ybs</div>
+                <div>Lembar 3 : ${prodiNameCleaned}</div>
+              </div>
+            </div>
+          </div>
+          
+          <table class="grades-table">
+            <thead>
+              <tr>
+                <th style="width: 35px; text-align: center;">No</th>
+                <th style="text-align: left;">MATA KULIAH</th>
+                <th style="width: 75px; text-align: center;">BOBOT<br/>SKS</th>
+                <th style="width: 80px; text-align: center;">NILAI<br/>ANGKA</th>
+                <th style="width: 65px; text-align: center;">HURUF</th>
+                <th style="width: 100px; text-align: center;">BOBOT<br/>x<br/>ANGKA</th>
+                <th style="width: 120px; text-align: center;">PREDIKAT</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${gradesHtml}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="2" style="text-align: right; font-weight: bold; padding-right: 15px;">Jumlah</td>
+                <td style="text-align: center; font-weight: bold;">${totalSks}</td>
+                <td colspan="2"></td>
+                <td style="text-align: center; font-weight: bold;">${totalSksBobot.toFixed(2)}</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+          
+          <div class="footer-container">
+            <div class="indices-box">
+              <table class="indices-table">
+                <tbody>
+                  <tr>
+                    <td class="label">INDEKS PRESTASI SEMESTER (IPS)</td>
+                    <td>: ${ips.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td class="label">NILAI KONDITE (NK)</td>
+                    <td>: 0.00</td>
+                  </tr>
+                  <tr>
+                    <td class="label">NILAI KESAMAPTAAN (NS)</td>
+                    <td>: 0.00</td>
+                  </tr>
+                  <tr>
+                    <td class="label">PERINGKAT AKHIR SEMESTER (PAS)</td>
+                    <td>: 0.00</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <div class="signatures-box">
+              <div class="date-row">Palembang, ${formattedDate}</div>
+              <div class="sigs-row">
+                <div class="sig-col">
+                  <div>Mengetahui,</div>
+                  <div style="font-weight: bold; font-size: 8.5pt;">KEPALA BAGIAN ADMINISTRASI</div>
+                  <div style="font-weight: bold; font-size: 8.5pt; margin-bottom: 5px;">AKADEMIK DAN KETARUNAAN</div>
+                  <div class="sig-space"></div>
+                  <div class="sig-name"><u>${settings.pejabat_akademik || 'Kodrat Alam, S.SiT., MT.'}</u></div>
+                  <div>NIP. ${settings.nip_pejabat_akademik || '197806292000031001'}</div>
+                </div>
+                
+                <div class="sig-col">
+                  <div>&nbsp;</div>
+                  <div style="font-weight: bold; font-size: 8.5pt;">KETUA PROGRAM STUDI</div>
+                  <div style="font-weight: bold; font-size: 8.5pt; margin-bottom: 5px;">${prodiNameCleaned}</div>
+                  <div class="sig-space"></div>
+                  <div class="sig-name"><u>${kaprodi.nama}</u></div>
+                  <div>NIP. ${kaprodi.nip}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+              }, 300);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
   };
 
   // Reset menu when switching role
@@ -1443,168 +1802,6 @@ export default function App() {
           />
         )}
       </main>
-
-      {/* Printable KHS Document (Hidden on screen, visible during print) */}
-      {khsPrintData && (
-        <div className="print-only-khs-document">
-          {/* Header block with Logo and Campus details */}
-          <div className="print-khs-header">
-            {settings.logo_url ? (
-              <img src={settings.logo_url} className="print-khs-logo" alt="Logo Kampus" />
-            ) : (
-              <div className="print-khs-logo-placeholder">S</div>
-            )}
-            <div className="print-khs-header-text">
-              <h2 className="print-univ-name">{(settings.nama_kampus?.toUpperCase() || 'POLITEKNIK TRANSPORTASI SDP PALEMBANG')}</h2>
-              <p className="print-univ-info">{settings.alamat_kampus || 'Jl. Residen Abdul Rozak, Palembang'}</p>
-              <p className="print-univ-info">Telp: {settings.telepon_kampus || '(0711) 712345'} | Email: {settings.email_kampus || 'info@poltektrans.ac.id'}</p>
-            </div>
-          </div>
-          <div className="print-khs-divider" style={{ borderBottom: '3px double #000', marginBottom: '15px' }} />
-          
-          <h3 className="print-document-title">KARTU HASIL STUDI (KHS)</h3>
-          
-          {/* Student details grid */}
-          <div className="print-student-info-grid">
-            <div className="print-info-left">
-              <table className="info-sub-table">
-                <tbody>
-                  <tr>
-                    <td>TAHUN AKADEMIK</td>
-                    <td>: {khsPrintData.tahun_ajaran || settings.tahun_ajaran_aktif}</td>
-                  </tr>
-                  <tr>
-                    <td>NAMA TARUNA</td>
-                    <td>: {khsPrintData.student.nama?.toUpperCase()}</td>
-                  </tr>
-                  <tr>
-                    <td>NOMOR TARUNA</td>
-                    <td>: {khsPrintData.student.nim_nip}</td>
-                  </tr>
-                  <tr>
-                    <td>ANGKATAN</td>
-                    <td>: Angkatan {khsPrintData.angkatan || '36'}</td>
-                  </tr>
-                  <tr>
-                    <td>TINGKAT/SEMESTER</td>
-                    <td>: Semester {khsPrintData.semester}</td>
-                  </tr>
-                  <tr>
-                    <td>PROGRAM STUDI</td>
-                    <td>: {khsPrintData.prodiName?.toUpperCase()}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            
-            <div className="print-info-right">
-              <div className="catatan-box">
-                <strong>Catatan:</strong>
-                <div>Lembar 1 : Taruna Ybs</div>
-                <div>Lembar 2 : Orang Tua Taruna Ybs</div>
-                <div>Lembar 3 : {khsPrintData.prodiName?.toUpperCase()}</div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Grades Table */}
-          <table className="print-grades-table">
-            <thead>
-              <tr>
-                <th style={{ width: '40px' }}>No</th>
-                <th>MATA KULIAH</th>
-                <th style={{ width: '80px' }}>BOBOT SKS</th>
-                <th style={{ width: '100px' }}>NILAI ANGKA</th>
-                <th style={{ width: '80px' }}>HURUF</th>
-                <th style={{ width: '100px' }}>BOBOT x ANGKA</th>
-                <th style={{ width: '150px' }}>PREDIKAT</th>
-              </tr>
-            </thead>
-            <tbody>
-              {khsPrintData.grades.map((g, idx) => {
-                const bobotVal = getBobot(g.nilai_huruf);
-                const bobotSksVal = g.sks * bobotVal;
-                let predikat = 'Cukup';
-                if (g.nilai_huruf === 'A') predikat = 'Dengan Pujian';
-                else if (g.nilai_huruf?.startsWith('B')) predikat = 'Sangat Memuaskan';
-                else if (g.nilai_huruf?.startsWith('C')) predikat = 'Memuaskan';
-                else if (g.nilai_huruf === 'D') predikat = 'Kurang';
-                else if (g.nilai_huruf === 'E') predikat = 'Gagal';
-                return (
-                  <tr key={idx}>
-                    <td style={{ textAlign: 'center' }}>{idx + 1}</td>
-                    <td>{g.nama_mk}</td>
-                    <td style={{ textAlign: 'center' }}>{g.sks}</td>
-                    <td style={{ textAlign: 'center' }}>{g.nilai_akhir?.toFixed(1) || '-'}</td>
-                    <td style={{ textAlign: 'center' }}>{g.nilai_huruf}</td>
-                    <td style={{ textAlign: 'center' }}>{bobotSksVal.toFixed(2)}</td>
-                    <td style={{ textAlign: 'center' }}>{predikat}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-            <tfoot>
-              <tr style={{ fontWeight: 'bold' }}>
-                <td colSpan="2" style={{ textAlign: 'right' }}>Jumlah</td>
-                <td style={{ textAlign: 'center' }}>{khsPrintData.totalSks}</td>
-                <td colSpan="2"></td>
-                <td style={{ textAlign: 'center' }}>{khsPrintData.totalSksBobot?.toFixed(2)}</td>
-                <td></td>
-              </tr>
-            </tfoot>
-          </table>
-          
-          {/* Academic Indices & Signatures */}
-          <div className="print-footer-grid">
-            <div className="print-indices-left">
-              <table className="print-indices-table">
-                <tbody>
-                  <tr>
-                    <td>INDEKS PRESTASI SEMESTER (IPS)</td>
-                    <td>: {khsPrintData.ips?.toFixed(2)}</td>
-                  </tr>
-                  <tr>
-                    <td>NILAI KONDITE (NK)</td>
-                    <td>: 85.00</td>
-                  </tr>
-                  <tr>
-                    <td>NILAI KESAMAPTAAN (NS)</td>
-                    <td>: 80.00</td>
-                  </tr>
-                  <tr>
-                    <td>PERINGKAT AKHIR SEMESTER (PAS)</td>
-                    <td>: 0.00</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            
-            <div className="print-signatures-right">
-              <div className="print-date">Palembang, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
-              
-              <div className="signatures-row">
-                <div className="sig-left">
-                  <div>Mengetahui,</div>
-                  <div style={{ fontWeight: 'bold' }}>KEPALA BAGIAN ADMINISTRASI AKADEMIK</div>
-                  <div style={{ fontWeight: 'bold', marginBottom: '12px' }}>DAN KETARUNAAN</div>
-                  <div className="sig-space" />
-                  <div className="sig-name"><u>Kodrat Alam, S.SiT., MT.</u></div>
-                  <div>NIP. 197806292000031001</div>
-                </div>
-                
-                <div className="sig-right">
-                  <div style={{ visibility: 'hidden' }}>.</div>
-                  <div style={{ fontWeight: 'bold' }}>KETUA PROGRAM STUDI</div>
-                  <div style={{ fontWeight: 'bold', marginBottom: '12px' }}>{khsPrintData.prodiName?.toUpperCase()}</div>
-                  <div className="sig-space" />
-                  <div className="sig-name"><u>{khsPrintData.kaprodi?.nama || '-'}</u></div>
-                  <div>NIP. {khsPrintData.kaprodi?.nip || '-'}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
