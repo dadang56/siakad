@@ -1877,6 +1877,7 @@ export default function AdminPortal({
                     <option value="dosen">Dosen</option>
                     <option value="admin_prodi">Admin Prodi</option>
                     <option value="superadmin">Superadmin</option>
+                    <option value="keuangan">Admin Keuangan</option>
                     <option value="pengawas">Pengawas</option>
                     <option value="pusbangkatar">Pusbangkatar</option>
                   </select>

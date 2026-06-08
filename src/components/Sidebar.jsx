@@ -134,7 +134,7 @@ export default function Sidebar({
           style={{ width: '100%', background: 'none', border: 'none', color: 'var(--danger)', marginTop: 'auto', padding: '12px 16px' }}
         >
           <LogOut className="menu-icon" />
-          <span>Ganti User</span>
+          <span>Keluar / Logout</span>
         </button>
         <div style={{ marginTop: '16px', fontSize: '10px' }}>
           {settings?.nama_kampus || 'Poltektrans SDP Palembang'}<br />

@@ -14,6 +14,7 @@ import TarunaPortal from './components/TarunaPortal';
 import DosenPortal from './components/DosenPortal';
 import AdminPortal from './components/AdminPortal';
 import KeuanganPortal from './components/KeuanganPortal';
+import Login from './components/Login';
 import { Anchor, ShieldAlert, Sparkles, User, Users, DollarSign } from 'lucide-react';
 import { supabase } from './lib/supabase';
 
@@ -45,14 +46,15 @@ export default function App() {
   const [rawUsersList, setRawUsersList] = useState([]);
   const [jadwalPembelajaranList, setJadwalPembelajaranList] = useState([]);
 
-  // 2. CONTEXT STATE (User Login Simulasi)
-  const [currentRole, setCurrentRole] = useState('taruna'); // 'taruna', 'dosen', 'admin', 'admin_prodi'
-  const [activeTarunaNim, setActiveTarunaNim] = useState('23.3.0123'); // Default Aditya Wiratama
-  const [activeDosenNidn, setActiveDosenNidn] = useState('04.1205.8801'); // Default Capt. Heri
-  const [adminProdiDept, setAdminProdiDept] = useState('D-III Nautika'); // Active department for Admin Prodi
+  // 2. CONTEXT STATE (User Login & Otentikasi Supabase)
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loggedInUser, setLoggedInUser] = useState(null);
+  const [currentRole, setCurrentRole] = useState(''); 
+  const [activeTarunaNim, setActiveTarunaNim] = useState(''); 
+  const [activeDosenNidn, setActiveDosenNidn] = useState(''); 
+  const [adminProdiDept, setAdminProdiDept] = useState(''); 
   
   const [activeMenu, setActiveMenu] = useState('krs');
-  const [showIdentitySelector, setShowIdentitySelector] = useState(false);
 
   // Reset menu when switching role
   useEffect(() => {
@@ -375,7 +377,8 @@ export default function App() {
   
   const currentUser = currentRole === 'taruna' ? currentTarunaObj : 
                       currentRole === 'dosen' ? currentDosenObj : 
-                      currentRole === 'admin_prodi' ? { nama: 'Admin Prodi', prodi: adminProdiDept } : null;
+                      currentRole === 'admin_prodi' ? { nama: loggedInUser?.nama || 'Admin Prodi', prodi: adminProdiDept } : 
+                      loggedInUser;
 
   // Compute class sessions list mapped from jadwal_pembelajaran table to match mock INITIAL_KELAS format for TarunaPortal and DosenPortal
   const classSessionsList = React.useMemo(() => {
@@ -1139,73 +1142,87 @@ export default function App() {
     }
   };
 
-  // Logout/Identity change handler
-  const handleLogout = () => {
-    setShowIdentitySelector(true);
+  // Authentication & Logout Handlers
+  const handleLoginSubmit = async (username, password) => {
+    try {
+      // 1. Supabase users table query
+      const { data: user, error } = await supabase
+        .from('users')
+        .select('*')
+        .or(`nim_nip.eq.${username},username.eq.${username}`)
+        .eq('password', password)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Login database error:", error);
+        return false;
+      }
+
+      if (user) {
+        let mappedRole = '';
+        if (user.role === 'superadmin') {
+          mappedRole = 'admin';
+        } else if (user.role === 'admin_prodi') {
+          mappedRole = 'admin_prodi';
+          const dept = PRODI_MAP_FROM_DB[user.prodi_id] || 'D-III Nautika';
+          setAdminProdiDept(dept);
+        } else if (user.role === 'mahasiswa') {
+          mappedRole = 'taruna';
+          setActiveTarunaNim(user.nim_nip);
+        } else if (user.role === 'dosen') {
+          mappedRole = 'dosen';
+          setActiveDosenNidn(user.nim_nip);
+        } else if (user.role === 'keuangan') {
+          mappedRole = 'keuangan';
+        } else {
+          return false;
+        }
+
+        setCurrentRole(mappedRole);
+        setLoggedInUser(user);
+        setIsLoggedIn(true);
+        return true;
+      }
+
+      // 2. Fallback keuangan account for testing/first run convenience
+      if (username === 'keuangan' && password === 'keuangan123') {
+        setCurrentRole('keuangan');
+        setLoggedInUser({ nama: 'Hj. Masayu, S.E.', role: 'keuangan' });
+        setIsLoggedIn(true);
+        return true;
+      }
+
+      return false;
+    } catch (err) {
+      console.error("Login handler exception:", err);
+      return false;
+    }
   };
 
-  const handleSelectIdentity = (role, id) => {
-    setCurrentRole(role);
-    if (role === 'taruna') {
-      setActiveTarunaNim(id);
-    } else if (role === 'dosen') {
-      setActiveDosenNidn(id);
-    }
-    setShowIdentitySelector(false);
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setLoggedInUser(null);
+    setCurrentRole('');
+    setActiveTarunaNim('');
+    setActiveDosenNidn('');
+    setAdminProdiDept('');
   };
+
+  if (!isLoggedIn) {
+    return <Login onLogin={handleLoginSubmit} settings={settings} />;
+  }
 
   return (
     <div className="app-container">
-      {/* Role Switcher Bar - Floating Header */}
-      <header className="role-switcher-bar">
-        <div className="logo-container">
+      {/* Top Branding Header (Simulated switcher buttons removed) */}
+      <header className="role-switcher-bar" style={{ justifyContent: 'center' }}>
+        <div className="logo-container" style={{ marginRight: 0 }}>
           {settings.logo_url ? (
             <img src={settings.logo_url} alt="Logo" style={{ height: '28px', objectFit: 'contain' }} />
           ) : (
             <Anchor className="logo-icon" />
           )}
           <span className="logo-text">{(settings.nama_aplikasi || 'SIAKAD')} {(settings.nama_kampus?.toUpperCase() || 'POLTEKTRANS SDP PALEMBANG')}</span>
-        </div>
-        
-        <div className="switcher-buttons">
-          <button 
-            className={`btn-switch taruna ${currentRole === 'taruna' ? 'active' : ''}`}
-            onClick={() => handleSelectIdentity('taruna', activeTarunaNim)}
-          >
-            <User style={{ width: '13px', height: '13px' }} /> Portal Mahasiswa
-          </button>
-          <button 
-            className={`btn-switch dosen ${currentRole === 'dosen' ? 'active' : ''}`}
-            onClick={() => handleSelectIdentity('dosen', activeDosenNidn)}
-          >
-            <Users style={{ width: '13px', height: '13px' }} /> Dosen Portal
-          </button>
-          <button 
-            className={`btn-switch admin ${currentRole === 'admin' ? 'active' : ''}`}
-            onClick={() => setCurrentRole('admin')}
-          >
-            <ShieldAlert style={{ width: '13px', height: '13px' }} /> Adm. Akademik
-          </button>
-          <button 
-            className={`btn-switch admin ${currentRole === 'admin_prodi' ? 'active' : ''}`}
-            onClick={() => { setCurrentRole('admin_prodi'); setAdminProdiDept('D-III Nautika'); }}
-          >
-            <ShieldAlert style={{ width: '13px', height: '13px' }} /> Admin Prodi
-          </button>
-          <button 
-            className={`btn-switch keuangan ${currentRole === 'keuangan' ? 'active' : ''}`}
-            onClick={() => setCurrentRole('keuangan')}
-          >
-            <DollarSign style={{ width: '13px', height: '13px' }} /> Admin Keuangan
-          </button>
-          <button 
-            className="btn-switch" 
-            style={{ borderLeft: '1px solid var(--glass-border)', color: 'var(--accent)', marginLeft: '4px' }}
-            onClick={() => setShowIdentitySelector(true)}
-            title="Ganti Identitas Aktif"
-          >
-            <Sparkles style={{ width: '13px', height: '13px' }} /> Switch User
-          </button>
         </div>
       </header>
 
@@ -1305,156 +1322,6 @@ export default function App() {
           />
         )}
       </main>
-
-      {/* IDENTITY SELECTOR MODAL (Simulated Authentication Switcher) */}
-      {showIdentitySelector && (
-        <div className="modal-overlay" style={{ display: 'flex' }}>
-          <div className="modal-content" style={{ maxWidth: '650px' }}>
-            <div className="modal-header">
-              <h3>Simulasi Login: Pilih Pengguna</h3>
-              <button onClick={() => setShowIdentitySelector(false)} className="btn-close">✕</button>
-            </div>
-            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                Untuk mempermudah pengujian alur kerja sistem informasi akademik, silakan pilih profil yang ingin disimulasikan sebagai pengguna aktif.
-              </p>
-
-              {/* Taruna Section */}
-              <div>
-                <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', fontSize: '14px', color: 'var(--primary-light)' }}>
-                  <User style={{ width: '16px', height: '16px' }} /> Sebagai Mahasiswa
-                </h4>
-                <div className="user-select-grid">
-                  {tarunaList.map(t => (
-                    <div 
-                      key={t.nim} 
-                      className="user-select-card"
-                      onClick={() => handleSelectIdentity('taruna', t.nim)}
-                    >
-                      <div className="user-select-avatar" style={{ background: 'var(--primary-light)' }}>
-                        {t.nama[0]}
-                      </div>
-                      <div className="user-select-details">
-                        <span className="user-select-name">{t.nama}</span>
-                        <span className="user-select-sub">{t.nim} | {t.prodi}</span>
-                        <span className="user-select-sub" style={{ color: t.status_ukt === 'Lunas' ? 'var(--success)' : 'var(--danger)' }}>
-                          Status Keuangan: {t.status_ukt}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Dosen Section */}
-              <div style={{ marginTop: '10px' }}>
-                <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', fontSize: '14px', color: 'var(--secondary)' }}>
-                  <Users style={{ width: '16px', height: '16px' }} /> Sebagai Dosen (Lecturer)
-                </h4>
-                <div className="user-select-grid">
-                  {dosenList.map(d => (
-                    <div 
-                      key={d.nidn} 
-                      className="user-select-card"
-                      onClick={() => handleSelectIdentity('dosen', d.nidn)}
-                    >
-                      <div className="user-select-avatar" style={{ background: 'var(--secondary)' }}>
-                        {d.nama.split(' ').filter(word => !word.includes('.') && !word.includes(','))[0]?.[0] || 'D'}
-                      </div>
-                      <div className="user-select-details">
-                        <span className="user-select-name">{d.nama}</span>
-                        <span className="user-select-sub">NIDN: {d.nidn}</span>
-                        <span className="user-select-sub">{d.prodi}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Admin Prodi Section */}
-              <div style={{ marginTop: '10px' }}>
-                <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', fontSize: '14px', color: 'var(--accent)' }}>
-                  <ShieldAlert style={{ width: '16px', height: '16px' }} /> Sebagai Admin Prodi
-                </h4>
-                <div className="user-select-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))' }}>
-                  <div 
-                    className="user-select-card"
-                    onClick={() => {
-                      setCurrentRole('admin_prodi');
-                      setAdminProdiDept('D-III Nautika');
-                      setShowIdentitySelector(false);
-                    }}
-                  >
-                    <div className="user-select-avatar" style={{ background: 'var(--accent)' }}>N</div>
-                    <div className="user-select-details">
-                      <span className="user-select-name">Admin Prodi Nautika</span>
-                      <span className="user-select-sub">D-III Nautika</span>
-                    </div>
-                  </div>
-                  <div 
-                    className="user-select-card"
-                    onClick={() => {
-                      setCurrentRole('admin_prodi');
-                      setAdminProdiDept('D-III Permesinan Kapal');
-                      setShowIdentitySelector(false);
-                    }}
-                  >
-                    <div className="user-select-avatar" style={{ background: 'var(--accent)' }}>P</div>
-                    <div className="user-select-details">
-                      <span className="user-select-name">Admin Prodi Permesinan</span>
-                      <span className="user-select-sub">D-III Permesinan Kapal</span>
-                    </div>
-                  </div>
-                  <div 
-                    className="user-select-card"
-                    onClick={() => {
-                      setCurrentRole('admin_prodi');
-                      setAdminProdiDept('D-III Manajemen Transportasi Perairan Daratan (MTPD)');
-                      setShowIdentitySelector(false);
-                    }}
-                  >
-                    <div className="user-select-avatar" style={{ background: 'var(--accent)' }}>M</div>
-                    <div className="user-select-details">
-                      <span className="user-select-name">Admin Prodi MTPD</span>
-                      <span className="user-select-sub">D-III MTPD</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Admin Section */}
-              <div style={{ marginTop: '10px', borderTop: '1px solid var(--glass-border)', paddingTop: '16px', display: 'flex', gap: '12px' }}>
-                <div 
-                  className="user-select-card" 
-                  onClick={() => { setCurrentRole('admin'); setShowIdentitySelector(false); }}
-                  style={{ flex: 1, borderStyle: 'dashed', justifyContent: 'center', gap: '10px', background: 'rgba(245, 158, 11, 0.05)' }}
-                >
-                  <ShieldAlert style={{ color: 'var(--accent)' }} />
-                  <div style={{ textAlign: 'center' }}>
-                    <span className="user-select-name" style={{ color: 'var(--accent)' }}>Masuk sebagai Adm. Akademik</span>
-                    <span className="user-select-sub" style={{ display: 'block' }}>Kelola data master & semester</span>
-                  </div>
-                </div>
-
-                <div 
-                  className="user-select-card" 
-                  onClick={() => { setCurrentRole('keuangan'); setShowIdentitySelector(false); }}
-                  style={{ flex: 1, borderStyle: 'dashed', justifyContent: 'center', gap: '10px', background: 'rgba(16, 185, 129, 0.05)' }}
-                >
-                  <DollarSign style={{ color: 'var(--success)' }} />
-                  <div style={{ textAlign: 'center' }}>
-                    <span className="user-select-name" style={{ color: 'var(--success)' }}>Masuk sebagai Admin Keuangan</span>
-                    <span className="user-select-sub" style={{ display: 'block' }}>Kelola & Konfirmasi Tarif Mahasiswa</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="btn btn-secondary btn-sm" onClick={() => setShowIdentitySelector(false)}>Tutup</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
