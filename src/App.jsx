@@ -15,7 +15,7 @@ import DosenPortal from './components/DosenPortal';
 import AdminPortal from './components/AdminPortal';
 import KeuanganPortal from './components/KeuanganPortal';
 import Login from './components/Login';
-import { Anchor, ShieldAlert, Sparkles, User, Users, DollarSign, Menu, X } from 'lucide-react';
+import { Anchor, ShieldAlert, Sparkles, User, Users, DollarSign, Menu, X, Sun, LogOut } from 'lucide-react';
 import { supabase } from './lib/supabase';
 
 const PRODI_MAP_TO_DB = {
@@ -1630,7 +1630,7 @@ export default function App() {
   return (
     <div className="app-container">
       {/* Top Branding Header */}
-      <header className="role-switcher-bar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px' }}>
+      <header className="role-switcher-bar">
         {/* Toggle Button for Mobile Sidebar */}
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -1650,28 +1650,44 @@ export default function App() {
           {isSidebarOpen ? <X style={{ width: '20px', height: '20px' }} /> : <Menu style={{ width: '20px', height: '20px' }} />}
         </button>
 
-        <div className="logo-container" style={{ 
-          position: 'absolute', 
-          left: '50%', 
-          transform: 'translateX(-50%)', 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '8px',
-          whiteSpace: 'nowrap'
-        }}>
-          {settings.logo_url ? (
-            <img src={settings.logo_url} alt="Logo" style={{ height: '24px', objectFit: 'contain' }} />
-          ) : (
-            <Anchor className="logo-icon" style={{ width: '18px', height: '18px' }} />
-          )}
-          <span className="logo-text" style={{ fontSize: '11px', display: 'flex', alignItems: 'center' }}>
-            <span className="logo-app-name">{(settings.nama_aplikasi || 'SIAKAD')}</span>
-            <span className="logo-campus-name" style={{ marginLeft: '6px' }}>{(settings.nama_kampus?.toUpperCase() || 'POLTEKTRANS SDP PALEMBANG')}</span>
-          </span>
-        </div>
+        {/* User Profile & Logout section on the right side of the header */}
+        <div className="header-user-section">
+          {/* User Profile Capsule */}
+          <div className="header-profile-pill">
+            <div className="profile-avatar-small">
+              {currentUser?.foto ? (
+                <img src={currentUser.foto} alt={currentUser.nama} />
+              ) : (
+                currentUser?.nama ? currentUser.nama.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : 'A'
+              )}
+            </div>
+            <div className="header-profile-info">
+              <span className="header-profile-name" title={currentUser?.nama || 'Administrator'}>
+                {currentUser?.nama || 'Administrator'}
+              </span>
+              <span className="header-profile-role">
+                {currentRole === 'taruna' ? `Mahasiswa` : 
+                 currentRole === 'dosen' ? 'Dosen Wali' : 
+                 currentRole === 'keuangan' ? 'Admin Keuangan' :              
+                 currentRole === 'admin_prodi' ? `Admin Prodi` : 'Adm. Akademik'}
+              </span>
+            </div>
+          </div>
 
-        {/* Spacer to balance flexbox layout on mobile */}
-        <div className="mobile-sidebar-toggle" style={{ width: '36px' }} />
+          {/* Theme Toggle (Static Sun Icon as per CAT mockup) */}
+          <button className="theme-toggle-btn" title="Toggle Theme">
+            <Sun className="theme-icon" />
+          </button>
+
+          {/* Logout Button */}
+          <button 
+            onClick={handleLogout}
+            className="header-logout-btn"
+          >
+            <LogOut className="logout-icon" />
+            <span className="logout-text">Keluar</span>
+          </button>
+        </div>
       </header>
 
       {/* Sidebar Layout */}

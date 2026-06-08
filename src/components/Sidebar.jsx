@@ -12,7 +12,8 @@ import {
   Award,
   CheckSquare,
   LogOut,
-  UserCheck
+  UserCheck,
+  Anchor
 } from 'lucide-react';
 
 export default function Sidebar({ 
@@ -77,37 +78,30 @@ export default function Sidebar({
 
   const menuItems = getMenuItems();
 
-  // Avatar helper
-  const getInitials = (name) => {
-    if (!name) return 'A';
-    return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
-  };
-
   return (
     <aside className={`app-sidebar ${isOpen ? 'open' : ''}`}>
-      {/* Profile Section */}
-      <div className="sidebar-profile">
-        <div className="profile-avatar">
-          {currentUser?.foto ? (
-            <img src={currentUser.foto} alt={currentUser.nama} />
-          ) : (
-            getInitials(currentUser?.nama || (currentRole === 'keuangan' ? 'Keuangan' : 'Admin'))
-          )}
-        </div>
-        <div className="profile-info">
-          <span className="profile-name" title={currentUser?.nama || (currentRole === 'keuangan' ? 'Hj. Masayu, S.E.' : 'Administrator')}>
-            {currentUser?.nama || (currentRole === 'keuangan' ? 'Hj. Masayu, S.E.' : 'Administrator')}
+      {/* Branding Section */}
+      <div className="sidebar-branding">
+        {settings?.logo_url ? (
+          <img src={settings.logo_url} alt="Logo" className="branding-logo" />
+        ) : (
+          <Anchor className="logo-icon branding-logo-fallback" />
+        )}
+        <div className="branding-text">
+          <span className="branding-app-name">
+            {settings?.nama_aplikasi || 'Si-PANDU'}
           </span>
-          <span className="profile-role">
-            {currentRole === 'taruna' ? `Mahasiswa - ${currentUser?.nim}` : 
-             currentRole === 'dosen' ? 'Dosen Wali' : 
-             currentRole === 'keuangan' ? 'Admin Keuangan' :              currentRole === 'admin_prodi' ? `Admin Prodi - ${currentUser?.prodi || ''}` : 'Adm. Akademik'}
+          <span className="branding-campus-name">
+            {settings?.nama_kampus || 'POLTEKTRANS'}
           </span>
         </div>
       </div>
 
       {/* Navigation Menu */}
-      <nav style={{ flex: 1 }}>
+      <nav style={{ flex: 1, padding: '16px 0', display: 'flex', flexDirection: 'column' }}>
+        <div className="menu-section-label">
+          Menu Utama
+        </div>
         <ul className="sidebar-menu">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -133,18 +127,7 @@ export default function Sidebar({
 
       {/* Sidebar Footer */}
       <div className="sidebar-footer">
-        <button 
-          onClick={() => {
-            onLogout();
-            if (onMenuClick) onMenuClick();
-          }}
-          className="menu-item"
-          style={{ width: '100%', background: 'none', border: 'none', color: 'var(--danger)', marginTop: 'auto', padding: '12px 16px' }}
-        >
-          <LogOut className="menu-icon" />
-          <span>Keluar / Logout</span>
-        </button>
-        <div style={{ marginTop: '16px', fontSize: '10px' }}>
+        <div className="footer-copyright">
           {settings?.nama_kampus || 'Poltektrans SDP Palembang'}<br />
           {settings?.nama_aplikasi || 'SIAKAD'} v1.0.0 © 2026
         </div>
