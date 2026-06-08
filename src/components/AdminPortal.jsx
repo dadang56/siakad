@@ -13,7 +13,8 @@ import {
   UserCheck, 
   Key,
   DollarSign,
-  RefreshCw
+  RefreshCw,
+  Building2
 } from 'lucide-react';
 
 export default function AdminPortal({ 
