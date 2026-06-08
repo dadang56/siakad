@@ -1163,4 +1163,7 @@ h1, h2, h3, h4, h5, h6 {
     transform: translateX(0);
     box-shadow: 10px 0 30px rgba(0, 0, 0, 0.6);
   }
+  .logo-campus-name {
+    display: none !important;
+  }
 }

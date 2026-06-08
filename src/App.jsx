@@ -1195,7 +1195,7 @@ export default function App() {
       const { data: user, error } = await supabase
         .from('users')
         .select('*')
-        .eq('username', username)
+        .or(`nim_nip.eq.${username},username.eq.${username}`)
         .eq('password', password)
         .maybeSingle();
 
@@ -1275,6 +1275,8 @@ export default function App() {
             padding: '8px',
             alignItems: 'center',
             justifyContent: 'center',
+            position: 'relative',
+            zIndex: 10
           }}
         >
           {isSidebarOpen ? <X style={{ width: '20px', height: '20px' }} /> : <Menu style={{ width: '20px', height: '20px' }} />}
@@ -1294,7 +1296,10 @@ export default function App() {
           ) : (
             <Anchor className="logo-icon" style={{ width: '18px', height: '18px' }} />
           )}
-          <span className="logo-text" style={{ fontSize: '11px' }}>{(settings.nama_aplikasi || 'SIAKAD')} {(settings.nama_kampus?.toUpperCase() || 'POLTEKTRANS SDP PALEMBANG')}</span>
+          <span className="logo-text" style={{ fontSize: '11px', display: 'flex', alignItems: 'center' }}>
+            <span className="logo-app-name">{(settings.nama_aplikasi || 'SIAKAD')}</span>
+            <span className="logo-campus-name" style={{ marginLeft: '6px' }}>{(settings.nama_kampus?.toUpperCase() || 'POLTEKTRANS SDP PALEMBANG')}</span>
+          </span>
         </div>
 
         {/* Spacer to balance flexbox layout on mobile */}
