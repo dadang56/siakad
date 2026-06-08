@@ -354,7 +354,7 @@ export default function AdminPortal({
           {/* Welcome Banner */}
           <div className="glass-card glow-gold" style={{ marginBottom: '32px', background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(245, 158, 11, 0.15) 100%)' }}>
             <span className="badge badge-warning" style={{ marginBottom: '8px' }}>
-              {currentRole === 'admin_prodi' ? `Portal Administrasi Prodi - ${adminProdiDept}` : 'Portal Administrasi Akademik & Kemahasiswaan (BAK)'}
+              {currentRole === 'admin_prodi' ? `Portal Administrasi Prodi - ${adminProdiDept}` : 'Portal Administrasi Akademik (Adm. Akademik)'}
             </span>
             <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '4px' }}>
               {currentRole === 'admin_prodi' ? `Panel Kendali Prodi - ${adminProdiDept}` : 'Panel Kendali Utama SIAKAD'}
@@ -472,7 +472,7 @@ export default function AdminPortal({
                 </div>
                 <div className="status-item">
                   <div className="status-item-info">
-                    <span className="status-item-title">Tarif UKT Dasar</span>
+                    <span className="status-item-title">Tarif Mahasiswa</span>
                     <span className="status-item-subtitle">Rp {settings.tarif_ukt.toLocaleString('id-ID')}</span>
                   </div>
                 </div>
@@ -490,7 +490,7 @@ export default function AdminPortal({
               <h2 className="page-title">Manajemen User</h2>
               <p className="page-subtitle">
                 {currentRole === 'admin' 
-                  ? 'Melihat daftar pengguna sistem CAT, LMS, dan SIAKAD (BAK Monitoring).' 
+                  ? 'Melihat daftar pengguna sistem CAT, LMS, dan SIAKAD (Adm. Akademik Monitoring).' 
                   : `Kelola data pengguna sistem pada Program Studi ${adminProdiDept}.`}
               </p>
             </div>
@@ -681,7 +681,7 @@ export default function AdminPortal({
               <h2 className="page-title">Manajemen Kelas</h2>
               <p className="page-subtitle">
                 {currentRole === 'admin' 
-                  ? 'Melihat daftar kelas yang terdaftar (BAK Monitoring).' 
+                  ? 'Melihat daftar kelas yang terdaftar (Adm. Akademik Monitoring).' 
                   : `Kelola data kelas untuk Program Studi ${adminProdiDept}.`}
               </p>
             </div>
@@ -863,7 +863,7 @@ export default function AdminPortal({
               <h2 className="page-title">Kurikulum & Mata Kuliah</h2>
               <p className="page-subtitle">
                 {currentRole === 'admin' 
-                  ? 'Melihat kurikulum mata kuliah wajib & pilihan per program studi (BAK Monitoring).' 
+                  ? 'Melihat kurikulum mata kuliah wajib & pilihan per program studi (Adm. Akademik Monitoring).' 
                   : `Kelola mata kuliah wajib & pilihan pada Program Studi ${adminProdiDept}.`}
               </p>
             </div>
@@ -1291,6 +1291,39 @@ export default function AdminPortal({
                 type="text" 
                 value={tempSettings.nama_kampus || ''} 
                 onChange={(e) => setTempSettings({ ...tempSettings, nama_kampus: e.target.value })}
+                className="form-control"
+                disabled={currentRole === 'admin_prodi'}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Alamat Kampus:</label>
+              <input 
+                type="text" 
+                value={tempSettings.alamat_kampus || ''} 
+                onChange={(e) => setTempSettings({ ...tempSettings, alamat_kampus: e.target.value })}
+                className="form-control"
+                disabled={currentRole === 'admin_prodi'}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Telepon Kampus:</label>
+              <input 
+                type="text" 
+                value={tempSettings.telepon_kampus || ''} 
+                onChange={(e) => setTempSettings({ ...tempSettings, telepon_kampus: e.target.value })}
+                className="form-control"
+                disabled={currentRole === 'admin_prodi'}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Email Kampus:</label>
+              <input 
+                type="text" 
+                value={tempSettings.email_kampus || ''} 
+                onChange={(e) => setTempSettings({ ...tempSettings, email_kampus: e.target.value })}
                 className="form-control"
                 disabled={currentRole === 'admin_prodi'}
               />

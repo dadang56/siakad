@@ -33,7 +33,7 @@ export default function Sidebar({
           { id: 'khs', label: 'Hasil Studi (KHS)', icon: GraduationCap },
           { id: 'jadwal', label: 'Jadwal Pembelajaran', icon: Calendar },
           { id: 'presensi', label: 'Presensi', icon: CheckSquare },
-          { id: 'keuangan', label: 'Keuangan (UKT)', icon: CreditCard }
+          { id: 'keuangan', label: 'Keuangan (Tarif Mahasiswa)', icon: CreditCard }
         ];
       case 'dosen':
         return [

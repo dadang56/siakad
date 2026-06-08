@@ -1247,7 +1247,7 @@ export default function App() {
                         <span className="user-select-name">{t.nama}</span>
                         <span className="user-select-sub">{t.nim} | {t.prodi}</span>
                         <span className="user-select-sub" style={{ color: t.status_ukt === 'Lunas' ? 'var(--success)' : 'var(--danger)' }}>
-                          UKT: {t.status_ukt}
+                          Status Keuangan: {t.status_ukt}
                         </span>
                       </div>
                     </div>
@@ -1353,7 +1353,7 @@ export default function App() {
                   <DollarSign style={{ color: 'var(--success)' }} />
                   <div style={{ textAlign: 'center' }}>
                     <span className="user-select-name" style={{ color: 'var(--success)' }}>Masuk sebagai Admin Keuangan</span>
-                    <span className="user-select-sub" style={{ display: 'block' }}>Kelola & Konfirmasi UKT</span>
+                    <span className="user-select-sub" style={{ display: 'block' }}>Kelola & Konfirmasi Tarif Mahasiswa</span>
                   </div>
                 </div>
               </div>

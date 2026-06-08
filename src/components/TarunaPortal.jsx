@@ -170,7 +170,7 @@ export default function TarunaPortal({
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Status Registrasi</div>
                 <span className={`badge ${currentUser.status_ukt === 'Lunas' ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: '13px', padding: '6px 14px', marginTop: '4px' }}>
-                  {currentUser.status_ukt === 'Lunas' ? 'UKT Lunas / Aktif' : 'UKT Belum Bayar'}
+                  {currentUser.status_ukt === 'Lunas' ? 'Tarif Mahasiswa Lunas / Aktif' : 'Tarif Mahasiswa Belum Bayar'}
                 </span>
               </div>
             </div>
@@ -334,7 +334,7 @@ export default function TarunaPortal({
               <div className="glass-card" style={{ borderLeft: '4px solid var(--secondary)' }}>
                 <h4 style={{ color: 'var(--secondary)', marginBottom: '8px' }}>Pengumuman Kampus</h4>
                 <p style={{ fontSize: '12px', lineHeight: '1.6', color: 'var(--text-body)' }}>
-                  Seluruh Mahasiswa Semester 4 wajib mengikuti Ujian Sertifikat Kompetensi Laut/Darat (Basic Safety Training) di Lab Simulator Poltektrans SDP mulai tanggal 12 Juni 2026. Harap lengkapi berkas di BAK.
+                  Seluruh Mahasiswa Semester 4 wajib mengikuti Ujian Sertifikat Kompetensi Laut/Darat (Basic Safety Training) di Lab Simulator Poltektrans SDP mulai tanggal 12 Juni 2026. Harap lengkapi berkas di Adm. Akademik.
                 </p>
               </div>
             </div>
@@ -362,7 +362,7 @@ export default function TarunaPortal({
             <div className="custom-alert custom-alert-warning">
               <AlertTriangle className="custom-alert-icon" />
               <div>
-                <strong>Akses KRS Ditutup:</strong> Uang Kuliah Tunggal (UKT) Anda terdeteksi belum lunas untuk semester ini. Silakan lakukan pembayaran di menu <strong>Keuangan (UKT)</strong> terlebih dahulu untuk membuka pengisian KRS.
+                <strong>Akses KRS Ditutup:</strong> Tarif Mahasiswa Anda terdeteksi belum lunas untuk semester ini. Silakan lakukan pembayaran di menu <strong>Keuangan (Tarif Mahasiswa)</strong> terlebih dahulu untuk membuka pengisian KRS.
               </div>
             </div>
           ) : (
@@ -719,7 +719,7 @@ export default function TarunaPortal({
                 </div>
               ) : (
                 <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                  KRS Anda disetujui tetapi tidak ada mata kuliah terpasang. Hubungi Admin BAK.
+                  KRS Anda disetujui tetapi tidak ada mata kuliah terpasang. Hubungi Adm. Akademik.
                 </div>
               )}
             </div>
@@ -810,7 +810,7 @@ export default function TarunaPortal({
           <div className="page-header">
             <div>
               <h2 className="page-title">Pembayaran Keuangan</h2>
-              <p className="page-subtitle">Uang Kuliah Tunggal Politeknik Transportasi SDP Palembang</p>
+              <p className="page-subtitle">Tarif Mahasiswa Politeknik Transportasi SDP Palembang</p>
             </div>
           </div>
 
@@ -826,7 +826,7 @@ export default function TarunaPortal({
 
               <div style={{ padding: '16px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-sm)', marginBottom: '24px' }}>
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Mata Anggaran Pembayaran</div>
-                <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-main)', marginTop: '4px' }}>UKT Program Studi {currentUser.prodi}</div>
+                <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-main)', marginTop: '4px' }}>Tarif Mahasiswa Program Studi {currentUser.prodi}</div>
                 <div style={{ fontSize: '28px', fontFamily: 'Outfit', fontWeight: '800', color: 'var(--accent)', marginTop: '8px' }}>
                   Rp {settings.tarif_ukt.toLocaleString('id-ID')}
                 </div>
@@ -836,7 +836,7 @@ export default function TarunaPortal({
               {currentUser.status_ukt !== 'Lunas' ? (
                 <div>
                   <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-                    Pembayaran UKT dilakukan secara Virtual Account Bank Mandiri/BNI. Setelah Anda melakukan pembayaran, silakan hubungi <strong>Admin Keuangan / Bendahara Kampus</strong> untuk melakukan konfirmasi verifikasi manual di sistem agar status keuangan Anda diaktifkan dan membuka kunci pengisian KRS.
+                    Pembayaran Tarif Mahasiswa dilakukan secara Virtual Account Bank Mandiri/BNI. Setelah Anda melakukan pembayaran, silakan hubungi <strong>Admin Keuangan / Bendahara Kampus</strong> untuk melakukan konfirmasi verifikasi manual di sistem agar status keuangan Anda diaktifkan dan membuka kunci pengisian KRS.
                   </p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent)', padding: '12px', background: 'rgba(245, 158, 11, 0.05)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(245, 158, 11, 0.1)' }}>
                     <AlertTriangle style={{ width: '20px', height: '20px', flexShrink: 0 }} />
@@ -859,7 +859,7 @@ export default function TarunaPortal({
               <div className="status-list">
                 <div className="status-item">
                   <div className="status-item-info">
-                    <span className="status-item-title">UKT Semester 4</span>
+                    <span className="status-item-title">Tarif Mahasiswa Semester 4</span>
                     <span className="status-item-subtitle">{currentUser.status_ukt === 'Lunas' ? 'Lunas - VA Mandiri' : 'Menunggu Pembayaran'}</span>
                   </div>
                   <span className={`badge ${currentUser.status_ukt === 'Lunas' ? 'badge-success' : 'badge-warning'}`}>
@@ -868,14 +868,14 @@ export default function TarunaPortal({
                 </div>
                 <div className="status-item">
                   <div className="status-item-info">
-                    <span className="status-item-title">UKT Semester 3</span>
+                    <span className="status-item-title">Tarif Mahasiswa Semester 3</span>
                     <span className="status-item-subtitle">Lunas - 15 Des 2025</span>
                   </div>
                   <span className="badge badge-success">Success</span>
                 </div>
                 <div className="status-item">
                   <div className="status-item-info">
-                    <span className="status-item-title">UKT Semester 2</span>
+                    <span className="status-item-title">Tarif Mahasiswa Semester 2</span>
                     <span className="status-item-subtitle">Lunas - 10 Jun 2025</span>
                   </div>
                   <span className="badge badge-success">Success</span>
@@ -1027,7 +1027,7 @@ export default function TarunaPortal({
                 </div>
                 <div>
                   <div>Palembang, {new Date().toLocaleDateString('id-ID')}</div>
-                  <div style={{ marginTop: '50px', fontWeight: 'bold' }}>(Direktur / Ka. BAK)</div>
+                  <div style={{ marginTop: '50px', fontWeight: 'bold' }}>(Direktur / Ka. Adm. Akademik)</div>
                   <div>Bagian Administrasi Akademik</div>
                 </div>
               </div>

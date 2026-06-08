@@ -273,7 +273,7 @@ export default function DosenPortal({
                                 <th>Semester</th>
                                 <th>Kelas</th>
                                 <th style={{ textAlign: 'center' }}>IPK</th>
-                                <th style={{ textAlign: 'center' }}>Status UKT</th>
+                                <th style={{ textAlign: 'center' }}>Status Keuangan</th>
                                 <th style={{ textAlign: 'center' }}>Status KRS</th>
                               </tr>
                             </thead>

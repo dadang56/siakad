@@ -990,5 +990,8 @@ export const SETTINGS = {
   tarif_ukt: 4500000,
   nama_aplikasi: "SIAKAD",
   sub_nama_aplikasi: "Sistem Informasi Akademik",
-  nama_kampus: "Politeknik Transportasi SDP Palembang"
+  nama_kampus: "Politeknik Transportasi SDP Palembang",
+  alamat_kampus: "Jl. Residen Abdul Rozak, Palembang",
+  telepon_kampus: "(0711) 712345",
+  email_kampus: "info@poltektrans.ac.id"
 };

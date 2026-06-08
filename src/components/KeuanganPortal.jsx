@@ -114,7 +114,7 @@ export default function KeuanganPortal({
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px', marginBottom: '30px' }}>
             <div>
               <h1 className="page-title">Dashboard Keuangan</h1>
-              <p className="page-subtitle">Ringkasan status pembayaran UKT mahasiswa per Program Studi.</p>
+              <p className="page-subtitle">Ringkasan status pembayaran Tarif Mahasiswa per Program Studi.</p>
             </div>
             
             {/* Live Clock Widget */}
@@ -208,7 +208,7 @@ export default function KeuanganPortal({
           <div className="page-header">
             <div>
               <h1 className="page-title">Verifikasi Pembayaran</h1>
-              <p className="page-subtitle">Kelola dan konfirmasi status pembayaran Uang Kuliah Tunggal (UKT) mahasiswa.</p>
+              <p className="page-subtitle">Kelola dan konfirmasi status pembayaran Tarif Mahasiswa.</p>
             </div>
           </div>
 
@@ -245,7 +245,7 @@ export default function KeuanganPortal({
                 onChange={(e) => setStatusFilter(e.target.value)}
                 style={{ padding: '10px', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-main)' }}
               >
-                <option value="all">Semua Status UKT</option>
+                <option value="all">Semua Status Tarif</option>
                 <option value="Lunas">Lunas</option>
                 <option value="Belum Lunas">Belum Lunas</option>
               </select>
@@ -301,8 +301,8 @@ export default function KeuanganPortal({
                             {t.status_ukt !== 'Lunas' && (
                               <button 
                                 onClick={() => {
-                                  if (confirm(`Konfirmasi pembayaran UKT untuk mahasiswa ${t.nama} (${t.nim})?`)) {
-                                    onConfirmUkt(t.nim, 'Lunas', 'Lunas (UKT Semester 4)');
+                                  if (confirm(`Konfirmasi pembayaran tarif mahasiswa untuk ${t.nama} (${t.nim})?`)) {
+                                    onConfirmUkt(t.nim, 'Lunas', 'Lunas (Tarif Mahasiswa Semester 4)');
                                   }
                                 }} 
                                 className="btn btn-primary btn-sm"
@@ -393,7 +393,7 @@ export default function KeuanganPortal({
           <div className="page-header">
             <div>
               <h1 className="page-title">Pengaturan Tarif Mahasiswa</h1>
-              <p className="page-subtitle">Atur nominal tagihan biaya kuliah / UKT dasar mahasiswa.</p>
+              <p className="page-subtitle">Atur nominal tagihan biaya kuliah / tarif dasar mahasiswa.</p>
             </div>
           </div>
 
