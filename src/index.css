@@ -1177,8 +1177,17 @@ h1, h2, h3, h4, h5, h6 {
     margin: 0 !important;
     padding: 0 !important;
   }
-  
-  .app-container,
+  #root,
+  .app-container {
+    display: block !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: auto !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
   .app-sidebar,
   .app-content,
   .role-switcher-bar,
