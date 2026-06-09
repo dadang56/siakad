@@ -84,13 +84,6 @@ export default function AdminPortal({
     ? matakuliahList.filter(m => m.prodi === adminProdiDept)
     : matakuliahList;
 
-  const renderedMatakuliahList = filteredMatakuliahList.filter(m => {
-    const matchesSearch = !mkSearchQuery.trim() || 
-      m.nama.toLowerCase().includes(mkSearchQuery.toLowerCase()) || 
-      m.kode.toLowerCase().includes(mkSearchQuery.toLowerCase());
-    const matchesSemester = mkSemesterFilter === 'all' || String(m.semester) === String(mkSemesterFilter);
-    return matchesSearch && matchesSemester;
-  });
 
   const filteredKrsList = currentRole === 'admin_prodi' && adminProdiDept
     ? krsList.filter(k => {
@@ -155,6 +148,14 @@ export default function AdminPortal({
   const [jadwalSearch, setJadwalSearch] = useState('');
   const [mkSearchQuery, setMkSearchQuery] = useState('');
   const [mkSemesterFilter, setMkSemesterFilter] = useState('all');
+
+  const renderedMatakuliahList = filteredMatakuliahList.filter(m => {
+    const matchesSearch = !mkSearchQuery.trim() || 
+      m.nama.toLowerCase().includes(mkSearchQuery.toLowerCase()) || 
+      m.kode.toLowerCase().includes(mkSearchQuery.toLowerCase());
+    const matchesSemester = mkSemesterFilter === 'all' || String(m.semester) === String(mkSemesterFilter);
+    return matchesSearch && matchesSemester;
+  });
 
   // New Target states
   const [targetUser, setTargetUser] = useState({ id: null, nim_nip: '', username: '', nama: '', password: '', role: 'mahasiswa', prodi_id: 'ffe7ed2a-97b6-458b-9fc7-4d9b62e04efb', kelas_id: '', email: '', no_hp: '', is_active: true });
