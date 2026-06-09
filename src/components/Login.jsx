@@ -52,6 +52,25 @@ export default function Login({ onLogin, settings }) {
       overflow: 'hidden'
     }}>
       
+      {/* Background Watermark Texture */}
+      {settings?.watermark_url && (
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%) rotate(-15deg)',
+          width: '75vh',
+          height: '75vh',
+          backgroundImage: `url(${settings.watermark_url})`,
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          backgroundSize: 'contain',
+          opacity: 0.035, // faint elegant watermark
+          pointerEvents: 'none',
+          zIndex: 0
+        }} />
+      )}
+      
       {/* 1. LEFT PANEL: Dynamic Premium Branding (Desktop only) */}
       {!isMobile && (
         <div style={{

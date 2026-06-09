@@ -415,7 +415,8 @@ export default function App() {
                 "6": siakadConfig.tarif_ukt || prev.tarif_ukt || 4500000,
                 "7": siakadConfig.tarif_ukt || prev.tarif_ukt || 4500000,
                 "8": siakadConfig.tarif_ukt || prev.tarif_ukt || 4500000
-              }
+              },
+              watermark_url: siakadConfig.watermark_url || prev.watermark_url
             };
             try {
               localStorage.setItem('siakad_cached_settings', JSON.stringify(next));
@@ -898,7 +899,8 @@ export default function App() {
         tahun_ajaran_aktif: newSettings.tahun_ajaran_aktif,
         krs_open: newSettings.krs_open,
         tarif_ukt: newSettings.tarif_ukt,
-        tarif_per_semester: newSettings.tarif_per_semester
+        tarif_per_semester: newSettings.tarif_per_semester,
+        watermark_url: newSettings.watermark_url
       };
 
       await supabase
@@ -1654,7 +1656,25 @@ export default function App() {
   }
 
   return (
-    <div className="app-container">
+    <div className="app-container" style={{ position: 'relative' }}>
+      {/* Background Watermark Texture */}
+      {settings?.watermark_url && (
+        <div style={{
+          position: 'fixed',
+          top: '55%',
+          left: '60%',
+          transform: 'translate(-50%, -50%) rotate(-15deg)',
+          width: '75vh',
+          height: '75vh',
+          backgroundImage: `url(${settings.watermark_url})`,
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          backgroundSize: 'contain',
+          opacity: 0.025, // faint elegant watermark
+          pointerEvents: 'none',
+          zIndex: 0
+        }} />
+      )}
       {/* Top Branding Header */}
       <header className="role-switcher-bar">
         {/* Toggle Button for Mobile Sidebar */}
