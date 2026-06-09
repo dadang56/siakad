@@ -146,8 +146,13 @@ export default function AdminPortal({
   const [userFilterKelas, setUserFilterKelas] = useState('Semua Kelas');
   const [kelasSearch, setKelasSearch] = useState('');
   const [jadwalSearch, setJadwalSearch] = useState('');
+  const [jadwalFilterKelas, setJadwalFilterKelas] = useState('all');
   const [mkSearchQuery, setMkSearchQuery] = useState('');
   const [mkSemesterFilter, setMkSemesterFilter] = useState('all');
+
+  const renderedJadwalList = filteredJadwalList.filter(j => {
+    return jadwalFilterKelas === 'all' || j.kelas_id === jadwalFilterKelas;
+  });
 
   const renderedMatakuliahList = filteredMatakuliahList.filter(m => {
     const matchesSearch = !mkSearchQuery.trim() || 
@@ -775,6 +780,24 @@ export default function AdminPortal({
             )}
           </div>
 
+          {/* Filter Bar */}
+          <div className="filter-bar glass-card" style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', padding: '16px', marginBottom: '24px', alignItems: 'center' }}>
+            <div className="select-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Filter style={{ width: '14px', height: '14px', color: 'var(--text-muted)' }} />
+              <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Filter Kelas:</span>
+              <select 
+                value={jadwalFilterKelas} 
+                onChange={(e) => setJadwalFilterKelas(e.target.value)}
+                style={{ padding: '10px', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-main)', fontSize: '14px' }}
+              >
+                <option value="all">Semua Kelas</option>
+                {filteredKelasList.map(kelas => (
+                  <option key={kelas.id} value={kelas.id}>{kelas.nama}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div className="glass-card glow-gold">
             <div className="table-container">
               <table className="custom-table">
@@ -790,7 +813,7 @@ export default function AdminPortal({
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredJadwalList.map((j) => {
+                  {renderedJadwalList.map((j) => {
                     const mk = matakuliahList.find(m => m.id === j.mata_kuliah_id || m.kode === j.mata_kuliah_kode);
                     const kl = kelasList.find(c => c.id === j.kelas_id);
                     const dosen = rawUsersList.find(u => u.id === j.dosen_id);
