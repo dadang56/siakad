@@ -14,7 +14,9 @@ import {
   Key,
   DollarSign,
   RefreshCw,
-  Building2
+  Building2,
+  Search,
+  Filter
 } from 'lucide-react';
 
 export default function AdminPortal({ 
@@ -82,6 +84,14 @@ export default function AdminPortal({
     ? matakuliahList.filter(m => m.prodi === adminProdiDept)
     : matakuliahList;
 
+  const renderedMatakuliahList = filteredMatakuliahList.filter(m => {
+    const matchesSearch = !mkSearchQuery.trim() || 
+      m.nama.toLowerCase().includes(mkSearchQuery.toLowerCase()) || 
+      m.kode.toLowerCase().includes(mkSearchQuery.toLowerCase());
+    const matchesSemester = mkSemesterFilter === 'all' || String(m.semester) === String(mkSemesterFilter);
+    return matchesSearch && matchesSemester;
+  });
+
   const filteredKrsList = currentRole === 'admin_prodi' && adminProdiDept
     ? krsList.filter(k => {
         const student = tarunaList.find(t => t.nim === k.nim);
@@ -143,6 +153,8 @@ export default function AdminPortal({
   const [userFilterKelas, setUserFilterKelas] = useState('Semua Kelas');
   const [kelasSearch, setKelasSearch] = useState('');
   const [jadwalSearch, setJadwalSearch] = useState('');
+  const [mkSearchQuery, setMkSearchQuery] = useState('');
+  const [mkSemesterFilter, setMkSemesterFilter] = useState('all');
 
   // New Target states
   const [targetUser, setTargetUser] = useState({ id: null, nim_nip: '', username: '', nama: '', password: '', role: 'mahasiswa', prodi_id: 'ffe7ed2a-97b6-458b-9fc7-4d9b62e04efb', kelas_id: '', email: '', no_hp: '', is_active: true });
@@ -882,22 +894,54 @@ export default function AdminPortal({
                   : `Kelola mata kuliah wajib & pilihan pada Program Studi ${adminProdiDept}.`}
               </p>
             </div>
-            {currentRole !== 'admin' && (
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button 
-                  onClick={handleSyncMatkul} 
-                  className="btn btn-secondary btn-sm"
-                  disabled={isSyncing}
-                  style={{ borderColor: 'var(--secondary)' }}
-                >
-                  <RefreshCw className={`menu-icon ${isSyncing ? 'spin' : ''}`} style={{ color: 'var(--secondary)' }} />
-                  {isSyncing ? 'Menyinkronkan...' : 'Sinkronkan CAT & LMS'}
-                </button>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button 
+                onClick={handleSyncMatkul} 
+                className="btn btn-secondary btn-sm"
+                disabled={isSyncing}
+                style={{ borderColor: 'var(--secondary)' }}
+              >
+                <RefreshCw className={`menu-icon ${isSyncing ? 'spin' : ''}`} style={{ color: 'var(--secondary)' }} />
+                {isSyncing ? 'Menyinkronkan...' : 'Sinkron CAT'}
+              </button>
+              {currentRole !== 'admin' && (
                 <button onClick={handleOpenAddMk} className="btn btn-primary btn-sm">
                   <Plus className="menu-icon" /> Tambah Matakuliah
                 </button>
-              </div>
-            )}
+              )}
+            </div>
+          </div>
+
+          {/* Filter Bar */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+            <div className="search-wrapper" style={{ position: 'relative' }}>
+              <Search style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', width: '16px', height: '16px' }} />
+              <input 
+                type="text" 
+                placeholder="Cari kode atau nama mata kuliah..."
+                value={mkSearchQuery}
+                onChange={(e) => setMkSearchQuery(e.target.value)}
+                style={{ width: '100%', padding: '10px 12px 10px 40px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-main)', fontSize: '14px' }}
+              />
+            </div>
+
+            <div style={{ position: 'relative' }}>
+              <select 
+                value={mkSemesterFilter} 
+                onChange={(e) => setMkSemesterFilter(e.target.value)}
+                style={{ width: '100%', padding: '10px 12px', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-main)', fontSize: '14px' }}
+              >
+                <option value="all">Semua Semester</option>
+                <option value="1">Semester 1</option>
+                <option value="2">Semester 2</option>
+                <option value="3">Semester 3</option>
+                <option value="4">Semester 4</option>
+                <option value="5">Semester 5</option>
+                <option value="6">Semester 6</option>
+                <option value="7">Semester 7</option>
+                <option value="8">Semester 8</option>
+              </select>
+            </div>
           </div>
 
           <div className="glass-card glow-gold">
@@ -914,7 +958,7 @@ export default function AdminPortal({
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredMatakuliahList.map((mk) => (
+                  {renderedMatakuliahList.map((mk) => (
                     <tr key={mk.kode}>
                       <td><span className="badge badge-primary">{mk.kode}</span></td>
                       <td><strong>{mk.nama}</strong></td>
