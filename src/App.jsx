@@ -63,7 +63,15 @@ export default function App() {
   const [loggedInUser, setLoggedInUser] = useState(() => {
     try {
       const saved = localStorage.getItem('siakad_user');
-      return saved ? JSON.parse(saved) : null;
+      if (!saved) return null;
+      // Older versions cached the password here: remove it
+      const parsed = JSON.parse(saved);
+      if (parsed && ('password' in parsed || 'session_token' in parsed)) {
+        delete parsed.password;
+        delete parsed.session_token;
+        localStorage.setItem('siakad_user', JSON.stringify(parsed));
+      }
+      return parsed;
     } catch {
       return null;
     }
@@ -1238,17 +1246,53 @@ export default function App() {
   // Authentication & Logout Handlers
   const handleLoginSubmit = async (username, password) => {
     try {
-      // 1. Supabase users table query
-      const { data: user, error } = await supabase
-        .from('users')
-        .select('*')
-        .or(`nim_nip.eq.${username},username.eq.${username}`)
-        .eq('password', password)
-        .maybeSingle();
+      // 1. Supabase Auth: ask the database for this account's login email
+      //    (RPC login_email). The password is checked by Supabase Auth only.
+      const identifier = (username || '').trim();
+      let user = null;
+      const { data: authEmail, error: rpcError } = await supabase
+        .rpc('login_email', { p_identifier: identifier });
+      if (rpcError && rpcError.code !== 'PGRST202') {
+        console.error("login_email error:", rpcError);
+      }
 
-      if (error) {
-        console.error("Login database error:", error);
-        return false;
+      if (authEmail) {
+        const { data: authData, error: authError } = await supabase.auth
+          .signInWithPassword({ email: authEmail, password });
+        if (authError || !authData?.session) {
+          return false;
+        }
+        const { data: profile, error: profileError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('auth_id', authData.user.id)
+          .maybeSingle();
+        if (profileError || !profile) {
+          await supabase.auth.signOut();
+          return false;
+        }
+        user = profile;
+      } else {
+        // 2. Legacy: account not moved to Supabase Auth yet
+        const { data: legacyUser, error } = await supabase
+          .from('users')
+          .select('*')
+          .or(`nim_nip.eq.${identifier},username.eq.${identifier}`)
+          .is('auth_id', null)
+          .eq('password', password)
+          .maybeSingle();
+
+        if (error) {
+          console.error("Login database error:", error);
+          return false;
+        }
+        user = legacyUser;
+      }
+
+      // Never keep the password or session token in memory or localStorage
+      if (user) {
+        delete user.password;
+        delete user.session_token;
       }
 
       if (user) {
@@ -1310,6 +1354,7 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    supabase.auth.signOut().catch(() => {});
     setIsLoggedIn(false);
     setLoggedInUser(null);
     setCurrentRole('');
