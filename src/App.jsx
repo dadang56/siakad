@@ -1332,19 +1332,6 @@ export default function App() {
         return true;
       }
 
-      // 2. Fallback keuangan account for testing/first run convenience
-      if (username === 'keuangan' && password === 'keuangan123') {
-        const fallbackUser = { nama: 'Hj. Masayu, S.E.', role: 'keuangan' };
-        setCurrentRole('keuangan');
-        setLoggedInUser(fallbackUser);
-        setIsLoggedIn(true);
-
-        localStorage.setItem('siakad_logged_in', 'true');
-        localStorage.setItem('siakad_user', JSON.stringify(fallbackUser));
-        localStorage.setItem('siakad_role', 'keuangan');
-
-        return true;
-      }
 
       return false;
     } catch (err) {
@@ -1370,6 +1357,16 @@ export default function App() {
     localStorage.removeItem('siakad_active_dosen_nidn');
     localStorage.removeItem('siakad_admin_prodi_dept');
   };
+
+  // Old-style logins (before Supabase Auth) have no Supabase session; the
+  // database no longer answers without one, so ask them to log in again.
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) handleLogout();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn]);
 
   // Handle print page check
   const isPrintPage = window.location.search.includes('print-khs=true');
