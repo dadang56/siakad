@@ -443,11 +443,14 @@ export default function App() {
     }
   };
 
+  // Load on start (settings for the login page) and again after login:
+  // the database only returns academic data to logged-in users.
   useEffect(() => {
     fetchAllDataFromSupabase().catch(err => {
       console.error("Supabase initial load error:", err);
     });
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn]);
 
   // Dynamic Browser Tab Title and Favicon Synchronization
   useEffect(() => {
